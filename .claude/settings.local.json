@@ -3,7 +3,32 @@
     "allow": [
       "Bash(flutter --version)",
       "Bash(where flutter)",
-      "Bash(powershell -Command \"Get-Command flutter -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")"
+      "Bash(powershell -Command \"Get-Command flutter -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path C:\\\\, D:\\\\, $env:LOCALAPPDATA, $env:APPDATA -Filter ''flutter'' -Recurse -Depth 4 -ErrorAction SilentlyContinue | Select-Object -First 5 FullName\")",
+      "Bash(powershell -Command \":*)",
+      "Bash(powershell.exe -NoProfile:*)",
+      "Bash(curl.exe --version)",
+      "Bash(curl.exe -L --progress-bar -o \"C:/Users/oleks/AppData/Local/Temp/flutter_windows_3.41.2-stable.zip\" \"https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.41.2-stable.zip\")",
+      "Bash(del \"C:\\\\Users\\\\oleks\\\\AppData\\\\Local\\\\Temp\\\\flutter_windows_3.41.2-stable.zip\")",
+      "Bash(C:/flutter/bin/flutter.bat doctor)",
+      "Bash(C:/flutter/bin/flutter.bat doctor -v)",
+      "Read(//c/Users/oleks/AppData/Local/**)",
+      "Bash(C:/flutter/bin/flutter.bat config --android-sdk \"C:/Users/oleks/AppData/Local/Android/Sdk\")",
+      "Bash(C:/flutter/bin/flutter.bat doctor --android-licenses)",
+      "Read(//c/Program Files/Android/Android Studio/bin/**)",
+      "Read(//c/Program Files/Android/Android Studio/**)",
+      "Bash(curl.exe -s \"https://dl.google.com/android/repository/repository2-3.xml\")",
+      "Bash(curl.exe -L --progress-bar -o \"C:/Users/oleks/AppData/Local/Temp/cmdline-tools.zip\" \"https://dl.google.com/android/repository/commandlinetools-win-14742923_latest.zip\")",
+      "Bash(yes)",
+      "Bash(\"C:/Users/oleks/AppData/Local/Android/Sdk/cmdline-tools/latest/bin/sdkmanager.bat\" --licenses)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" yes)",
+      "Bash(C:/flutter/bin/flutter.bat create . --org com.desperadoalex13 --platforms android,ios)",
+      "Bash(C:/flutter/bin/flutter.bat pub get)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\oleks\\AppData\\Local\\Temp",
+      "\\tmp",
+      "C:\\Windows\\Temp"
     ]
   }
 }
