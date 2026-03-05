@@ -42,16 +42,16 @@ class Dish {
       };
 
   double get totalCalories =>
-      ingredients.fold(0, (sum, i) => sum + i.caloriesPerServing);
+      ingredients.fold(0, (acc, i) => acc + i.caloriesPerServing);
 
   double get totalProtein =>
-      ingredients.fold(0, (sum, i) => sum + i.proteinPerServing);
+      ingredients.fold(0, (acc, i) => acc + i.proteinPerServing);
 
   double get totalFat =>
-      ingredients.fold(0, (sum, i) => sum + i.fatPerServing);
+      ingredients.fold(0, (acc, i) => acc + i.fatPerServing);
 
   double get totalCarbs =>
-      ingredients.fold(0, (sum, i) => sum + i.carbsPerServing);
+      ingredients.fold(0, (acc, i) => acc + i.carbsPerServing);
 }
 
 class Ingredient {
