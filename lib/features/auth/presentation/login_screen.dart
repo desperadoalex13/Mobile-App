@@ -167,6 +167,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (msg.contains('network-request-failed')) {
       return 'No internet connection.';
     }
+    if (msg.contains('operation-not-allowed') || msg.contains('configuration-not-found')) {
+      return 'Email/password sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.';
+    }
+    if (msg.contains('permission-denied')) {
+      return 'Database permission denied. Check Firestore security rules.';
+    }
     return 'Something went wrong. Please try again.';
   }
 }
