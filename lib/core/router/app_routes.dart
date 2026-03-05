@@ -6,5 +6,6 @@ abstract class AppRoutes {
   static const register = '/register';
   static const mealPlan = '/';
   static const dishLibrary = '/dishes';
+  static const dishForm = '/dishes/form';
   static const shoppingList = '/shopping';
 }

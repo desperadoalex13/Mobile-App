@@ -7,8 +7,10 @@ import '../../features/auth/presentation/auth_controller.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
-import '../../features/meal_plan/presentation/meal_plan_screen.dart';
+import '../../features/dish_library/domain/dish_model.dart';
+import '../../features/dish_library/presentation/dish_form_screen.dart';
 import '../../features/dish_library/presentation/dish_library_screen.dart';
+import '../../features/meal_plan/presentation/meal_plan_screen.dart';
 import '../../features/shopping_list/presentation/shopping_list_screen.dart';
 
 part 'app_routes.dart';
@@ -54,6 +56,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.register,
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dishForm,
+        name: 'dish-form',
+        builder: (context, state) =>
+            DishFormScreen(dish: state.extra as Dish?),
       ),
       ShellRoute(
         builder: (context, state, child) => ScaffoldWithNavBar(child: child),
@@ -130,8 +138,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
 
   int _selectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    if (location == AppRoutes.dishLibrary) return 1;
-    if (location == AppRoutes.shoppingList) return 2;
+    if (location.startsWith(AppRoutes.dishLibrary)) return 1;
+    if (location.startsWith(AppRoutes.shoppingList)) return 2;
     return 0;
   }
 }
