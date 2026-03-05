@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/firebase/firebase_providers.dart';
+import '../../features/auth/presentation/auth_controller.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/meal_plan/presentation/meal_plan_screen.dart';
 import '../../features/dish_library/presentation/dish_library_screen.dart';
 import '../../features/shopping_list/presentation/shopping_list_screen.dart';
@@ -13,22 +15,36 @@ part 'app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthNotifier(ref);
+  ref.onDispose(notifier.dispose);
 
   return GoRouter(
-    initialLocation: AppRoutes.mealPlan,
+    initialLocation: AppRoutes.splash,
     refreshListenable: notifier,
     debugLogDiagnostics: false,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
+
+      // Auth state not yet resolved — stay on splash
+      if (authState.isLoading) return AppRoutes.splash;
+
       final isLoggedIn = authState.valueOrNull != null;
       final isAuthRoute = state.matchedLocation == AppRoutes.login ||
           state.matchedLocation == AppRoutes.register;
+      final isSplash = state.matchedLocation == AppRoutes.splash;
+
+      // Auth resolved — leave splash
+      if (isSplash) return isLoggedIn ? AppRoutes.mealPlan : AppRoutes.login;
 
       if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
       if (isLoggedIn && isAuthRoute) return AppRoutes.mealPlan;
       return null;
     },
     routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
@@ -70,14 +86,24 @@ class _AuthNotifier extends ChangeNotifier {
   }
 }
 
-class ScaffoldWithNavBar extends StatelessWidget {
+class ScaffoldWithNavBar extends ConsumerWidget {
   const ScaffoldWithNavBar({super.key, required this.child});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sign out',
+            onPressed: () =>
+                ref.read(authControllerProvider.notifier).signOut(),
+          ),
+        ],
+      ),
       body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex(context),
@@ -92,9 +118,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
           }
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.calendar_today), label: 'Plan'),
+          NavigationDestination(
+              icon: Icon(Icons.calendar_today), label: 'Plan'),
           NavigationDestination(icon: Icon(Icons.menu_book), label: 'Dishes'),
-          NavigationDestination(icon: Icon(Icons.shopping_cart), label: 'Shopping'),
+          NavigationDestination(
+              icon: Icon(Icons.shopping_cart), label: 'Shopping'),
         ],
       ),
     );
