@@ -26,10 +26,14 @@ dependencies:
   # UI
   cupertino_icons: ^1.0.8
 
+  # Logging
+  path_provider: ^2.1.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  mocktail: ^1.0.4
 
   # Code generation
   riverpod_generator: ^2.4.3
