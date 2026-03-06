@@ -292,6 +292,11 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
   }
 }
 
+/// Formats a double as an integer string when it has no fractional part
+/// (e.g. 100.0 → "100", 12.5 → "12.5").
+String _fmtNum(double v) =>
+    v % 1 == 0 ? v.toInt().toString() : v.toString();
+
 // ============================================================================
 // Section header with "add" button
 // ============================================================================
@@ -345,7 +350,7 @@ class _IngredientRow extends StatelessWidget {
       child: ListTile(
         title: Text(ingredient.name),
         subtitle: Text(
-          '${ingredient.amountPerServing}${ingredient.unit}  ·  '
+          '${_fmtNum(ingredient.amountPerServing)} ${ingredient.unit}  ·  '
           '${ingredient.caloriesPerServing.round()} kcal',
         ),
         trailing: Row(
@@ -476,15 +481,15 @@ class _IngredientDialogState extends State<_IngredientDialog> {
     final i = widget.initial;
     _nameCtrl = TextEditingController(text: i?.name ?? '');
     _amountCtrl = TextEditingController(
-        text: i != null ? i.amountPerServing.toString() : '');
+        text: i != null ? _fmtNum(i.amountPerServing) : '');
     _calCtrl = TextEditingController(
-        text: i != null ? i.caloriesPerServing.toString() : '');
+        text: i != null ? _fmtNum(i.caloriesPerServing) : '');
     _protCtrl = TextEditingController(
-        text: i != null ? i.proteinPerServing.toString() : '');
+        text: i != null ? _fmtNum(i.proteinPerServing) : '');
     _fatCtrl = TextEditingController(
-        text: i != null ? i.fatPerServing.toString() : '');
+        text: i != null ? _fmtNum(i.fatPerServing) : '');
     _carbsCtrl = TextEditingController(
-        text: i != null ? i.carbsPerServing.toString() : '');
+        text: i != null ? _fmtNum(i.carbsPerServing) : '');
     _unit = i?.unit ?? 'g';
   }
 
@@ -597,7 +602,7 @@ class _IngredientDialogState extends State<_IngredientDialog> {
         ),
         FilledButton(
           onPressed: _confirm,
-          child: const Text('Add'),
+          child: Text(widget.initial != null ? 'Save' : 'Add'),
         ),
       ],
     );

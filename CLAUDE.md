@@ -84,16 +84,27 @@ Mobile-App/
 │   │   └── firebase/
 │   │       ├── firebase_options.dart     # Generated Firebase config (gitignored)
 │   │       └── firebase_providers.dart   # Riverpod providers for Auth/Firestore/Storage
+│   ├── core/
+│   │   ├── logging/
+│   │   │   └── app_log_service.dart          # Singleton file logger (daily log, uid, ISO timestamps)
 │   ├── features/
 │   │   ├── auth/
 │   │   │   ├── data/auth_repository.dart
-│   │   │   └── presentation/login_screen.dart
+│   │   │   └── presentation/
+│   │   │       ├── auth_controller.dart
+│   │   │       ├── login_screen.dart
+│   │   │       ├── register_screen.dart
+│   │   │       └── splash_screen.dart
 │   │   ├── meal_plan/
 │   │   │   ├── domain/meal_plan_model.dart   # MealPlan, DayPlan, MealSlot
 │   │   │   └── presentation/meal_plan_screen.dart
 │   │   ├── dish_library/
+│   │   │   ├── data/dish_repository.dart     # Firestore CRUD: users/{uid}/dishes/{id}
 │   │   │   ├── domain/dish_model.dart        # Dish, Ingredient (extensible)
-│   │   │   └── presentation/dish_library_screen.dart
+│   │   │   └── presentation/
+│   │   │       ├── dish_library_screen.dart  # List of dishes with FAB, edit/delete
+│   │   │       ├── dish_form_screen.dart     # Add/Edit dish form (outside ShellRoute)
+│   │   │       └── dish_providers.dart       # dishesProvider, dishMutationProvider
 │   │   └── shopping_list/
 │   │       ├── domain/shopping_list_model.dart
 │   │       └── presentation/shopping_list_screen.dart
@@ -184,8 +195,42 @@ dart run build_runner watch  # watch mode
 
 ---
 
+## Implemented Features
+
+### Authentication
+- Firebase Auth sign-in, register, sign-out
+- Firestore user profile created on registration (`users/{uid}`)
+- Router guard: splash → login (unauthenticated) or meal-plan (authenticated)
+- Auth events logged via `AppLogService`
+
+### Error Logging (`AppLogService`)
+- Singleton at `lib/core/logging/app_log_service.dart`
+- Writes to `<app-documents>/logs/app_YYYY-MM-DD.log` (daily rotation)
+- Entry format: `[ISO timestamp] [LEVEL] [uid:xxx] message`
+- `setUserId(uid)` / `setUserId(null)` to attach user identity to entries
+- `AppLogService.forTest(File)` constructor for unit testing without mocking
+- Initialized in `main.dart`; `FlutterError.onError` routes Flutter framework errors to the log
+
+### Dish Library
+- Full CRUD: Firestore subcollection `users/{uid}/dishes/{dishId}`
+- `dish_form_screen.dart` is **outside** `ShellRoute` (no bottom nav while editing)
+- Navigate to form: `context.push(AppRoutes.dishForm)` (add) or `context.push(AppRoutes.dishForm, extra: dish)` (edit)
+- Nutrition totals (calories/protein/fat/carbs) computed live from ingredients — never stored
+- Ingredient amounts stored as `double` per serving; `_fmtNum()` helper trims trailing `.0` in UI
+- Nutrition data: manual entry only for MVP; product database planned post-MVP
+- `DishMutationController` logs all save/delete successes and failures
+
+### Testing
+- **82 tests** in `test/` — all pass, zero analyzer issues
+- `mocktail: ^1.0.4` (not ^0.3.0 — conflicts with custom_lint)
+- `// ignore: subtype_of_sealed_class` required for mocking Firestore sealed classes
+- Widget test stubs for `authControllerProvider` must **extend `AuthController`**, not `AsyncNotifier<void>` directly
+
+---
+
 ## Notes
 
 - `firebase_options.dart` is manually maintained (no FlutterFire CLI — Windows auth restrictions). Regenerate by copying values from Firebase console when project config changes.
 - `flutter analyze` must pass with zero issues before committing.
 - Web platform folder (`web/`) is not generated yet — run `flutter create . --platforms web` to add it.
+- `ScaffoldWithNavBar` renders a route-aware title (Meal Plan / Dishes / Shopping) in its AppBar.

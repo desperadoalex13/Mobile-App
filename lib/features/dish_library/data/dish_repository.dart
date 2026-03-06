@@ -18,7 +18,10 @@ class DishRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
 
-  String get _uid => _auth.currentUser!.uid;
+  String get _uid {
+    assert(_auth.currentUser != null, 'DishRepository used while signed out');
+    return _auth.currentUser!.uid;
+  }
 
   CollectionReference<Map<String, dynamic>> get _dishes =>
       _firestore.collection('users').doc(_uid).collection('dishes');

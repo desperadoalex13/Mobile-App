@@ -101,8 +101,10 @@ class ScaffoldWithNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final location = GoRouterState.of(context).matchedLocation;
     return Scaffold(
       appBar: AppBar(
+        title: Text(_titleForLocation(location)),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -141,5 +143,11 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     if (location.startsWith(AppRoutes.dishLibrary)) return 1;
     if (location.startsWith(AppRoutes.shoppingList)) return 2;
     return 0;
+  }
+
+  String _titleForLocation(String location) {
+    if (location.startsWith(AppRoutes.dishLibrary)) return 'Dishes';
+    if (location.startsWith(AppRoutes.shoppingList)) return 'Shopping';
+    return 'Meal Plan';
   }
 }
