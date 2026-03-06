@@ -8,6 +8,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/dish_library/domain/dish_model.dart';
+import '../../features/dish_library/presentation/dish_detail_screen.dart';
 import '../../features/dish_library/presentation/dish_form_screen.dart';
 import '../../features/dish_library/presentation/dish_library_screen.dart';
 import '../../features/meal_plan/presentation/meal_plan_screen.dart';
@@ -56,6 +57,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.register,
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dishDetail,
+        name: 'dish-detail',
+        builder: (context, state) =>
+            DishDetailScreen(dish: state.extra as Dish),
       ),
       GoRoute(
         path: AppRoutes.dishForm,

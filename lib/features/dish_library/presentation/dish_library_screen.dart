@@ -130,7 +130,7 @@ class _DishTile extends ConsumerWidget {
           PopupMenuItem(value: 'delete', child: Text('Delete')),
         ],
       ),
-      onTap: () => context.push(AppRoutes.dishForm, extra: dish),
+      onTap: () => context.push(AppRoutes.dishDetail, extra: dish),
     );
   }
 
