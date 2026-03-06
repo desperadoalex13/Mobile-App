@@ -275,6 +275,7 @@ class _DayCard extends StatelessWidget {
     final isToday = date.isSameDay(DateTime.now());
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final label = '${weekdays[date.weekday - 1]} ${date.toDisplayDate()}';
+    final nutrition = _calcDayNutrition(dayPlan, dishMap);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -314,6 +315,15 @@ class _DayCard extends StatelessWidget {
                     ),
                   ],
                   const Spacer(),
+                  if (nutrition.kcal > 0)
+                    Text(
+                      '${nutrition.kcal.round()} kcal',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  const SizedBox(width: 4),
                   Icon(Icons.chevron_right,
                       size: 16, color: colorScheme.onSurfaceVariant),
                 ],
@@ -412,6 +422,7 @@ class _DayView extends ConsumerWidget {
       padding: const EdgeInsets.all(12),
       children: [
         _CopyDayButton(date: date),
+        _DayNutritionSummary(dayPlan: dayPlan, dishMap: dishMap),
         ...dayPlan.mealSlots.map((slot) => _SlotSection(
               date: date,
               slot: slot,
@@ -562,6 +573,90 @@ class _CopyDayButton extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+// ============================================================================
+// Nutrition helpers and widgets
+// ============================================================================
+
+({double kcal, double protein, double fat, double carbs}) _calcDayNutrition(
+    DayPlan day, Map<String, Dish> dishMap) {
+  double kcal = 0, protein = 0, fat = 0, carbs = 0;
+  for (final slot in day.mealSlots) {
+    for (final id in slot.dishIds) {
+      final dish = dishMap[id];
+      if (dish == null) continue;
+      kcal += dish.totalCalories;
+      protein += dish.totalProtein;
+      fat += dish.totalFat;
+      carbs += dish.totalCarbs;
+    }
+  }
+  return (kcal: kcal, protein: protein, fat: fat, carbs: carbs);
+}
+
+class _DayNutritionSummary extends StatelessWidget {
+  const _DayNutritionSummary({required this.dayPlan, required this.dishMap});
+
+  final DayPlan dayPlan;
+  final Map<String, Dish> dishMap;
+
+  @override
+  Widget build(BuildContext context) {
+    final n = _calcDayNutrition(dayPlan, dishMap);
+    if (n.kcal == 0) return const SizedBox.shrink();
+
+    String fmt(double v) =>
+        v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(1);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      color: Theme.of(context).colorScheme.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        child: Row(
+          children: [
+            _NutrientChip(label: 'kcal', value: n.kcal.round().toString()),
+            _NutrientChip(label: 'Protein', value: '${fmt(n.protein)}g'),
+            _NutrientChip(label: 'Fat', value: '${fmt(n.fat)}g'),
+            _NutrientChip(label: 'Carbs', value: '${fmt(n.carbs)}g'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NutrientChip extends StatelessWidget {
+  const _NutrientChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+          ),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onPrimaryContainer,
+                ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
