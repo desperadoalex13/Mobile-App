@@ -61,6 +61,12 @@ class AuthRepository {
   Future<void> updateProfile(String uid, Map<String, dynamic> fields) =>
       _usersCollection.doc(uid).update(fields);
 
+  /// Live stream of the user profile document.
+  Stream<UserProfile?> watchProfile(String uid) =>
+      _usersCollection.doc(uid).snapshots().map(
+            (doc) => doc.exists ? UserProfile.fromFirestore(doc) : null,
+          );
+
   CollectionReference<Map<String, dynamic>> get _usersCollection =>
       _firestore.collection('users');
 }

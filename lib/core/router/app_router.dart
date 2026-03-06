@@ -12,6 +12,7 @@ import '../../features/dish_library/presentation/dish_detail_screen.dart';
 import '../../features/dish_library/presentation/dish_form_screen.dart';
 import '../../features/dish_library/presentation/dish_library_screen.dart';
 import '../../features/meal_plan/presentation/meal_plan_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shopping_list/presentation/shopping_list_screen.dart';
 
 part 'app_routes.dart';
@@ -88,6 +89,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'shopping-list',
             builder: (context, state) => const ShoppingListScreen(),
           ),
+          GoRoute(
+            path: AppRoutes.settings,
+            name: 'settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
         ],
       ),
     ],
@@ -132,6 +138,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
               context.go(AppRoutes.dishLibrary);
             case 2:
               context.go(AppRoutes.shoppingList);
+            case 3:
+              context.go(AppRoutes.settings);
           }
         },
         destinations: const [
@@ -140,6 +148,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
           NavigationDestination(icon: Icon(Icons.menu_book), label: 'Dishes'),
           NavigationDestination(
               icon: Icon(Icons.shopping_cart), label: 'Shopping'),
+          NavigationDestination(
+              icon: Icon(Icons.settings_outlined), label: 'Settings'),
         ],
       ),
     );
@@ -149,12 +159,14 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     final location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith(AppRoutes.dishLibrary)) return 1;
     if (location.startsWith(AppRoutes.shoppingList)) return 2;
+    if (location.startsWith(AppRoutes.settings)) return 3;
     return 0;
   }
 
   String _titleForLocation(String location) {
     if (location.startsWith(AppRoutes.dishLibrary)) return 'Dishes';
     if (location.startsWith(AppRoutes.shoppingList)) return 'Shopping';
+    if (location.startsWith(AppRoutes.settings)) return 'Settings';
     return 'Meal Plan';
   }
 }

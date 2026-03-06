@@ -9,4 +9,5 @@ abstract class AppRoutes {
   static const dishDetail = '/dishes/detail';
   static const dishForm = '/dishes/form';
   static const shoppingList = '/shopping';
+  static const settings = '/settings';
 }

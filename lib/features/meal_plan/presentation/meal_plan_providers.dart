@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging/app_log_service.dart';
 import '../../../shared/utils/date_utils.dart';
+import '../../auth/presentation/profile_providers.dart';
 import '../data/meal_plan_repository.dart';
 import '../domain/meal_plan_model.dart';
 
@@ -26,6 +27,11 @@ final mealPlanMutationProvider =
 class MealPlanMutationNotifier extends AsyncNotifier<void> {
   @override
   FutureOr<void> build() {}
+
+  List<MealSlot> _defaultSlots() {
+    final names = ref.read(userSlotsProvider);
+    return names.map((n) => MealSlot(name: n, dishIds: [])).toList();
+  }
 
   Future<void> addDish(DateTime date, String slotName, String dishId) async {
     state = const AsyncLoading();
@@ -99,7 +105,7 @@ class MealPlanMutationNotifier extends AsyncNotifier<void> {
         final targetDate = targetWeek.add(Duration(days: i));
         final sourceDay = sourcePlan.days.firstWhere(
           (d) => d.date.weekday == targetDate.weekday,
-          orElse: () => DayPlan(date: targetDate, mealSlots: MealSlot.defaults),
+          orElse: () => DayPlan(date: targetDate, mealSlots: _defaultSlots()),
         );
         return DayPlan(
           date: targetDate,
@@ -141,7 +147,7 @@ class MealPlanMutationNotifier extends AsyncNotifier<void> {
 
       final sourceDay = sourcePlan?.days.firstWhere(
         (d) => d.date.weekday == targetDate.weekday,
-        orElse: () => DayPlan(date: targetDate, mealSlots: MealSlot.defaults),
+        orElse: () => DayPlan(date: targetDate, mealSlots: _defaultSlots()),
       );
 
       if (sourceDay == null ||
@@ -157,7 +163,7 @@ class MealPlanMutationNotifier extends AsyncNotifier<void> {
             7,
             (i) => DayPlan(
               date: targetWeek.add(Duration(days: i)),
-              mealSlots: MealSlot.defaults,
+              mealSlots: _defaultSlots(),
             ),
           );
 
@@ -207,7 +213,7 @@ class MealPlanMutationNotifier extends AsyncNotifier<void> {
           7,
           (i) => DayPlan(
             date: week.add(Duration(days: i)),
-            mealSlots: MealSlot.defaults,
+            mealSlots: _defaultSlots(),
           ),
         );
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../auth/presentation/profile_providers.dart';
 import '../../dish_library/domain/dish_model.dart';
 import '../../dish_library/presentation/dish_providers.dart';
 import '../domain/meal_plan_model.dart';
@@ -223,6 +224,10 @@ class _WeekView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final defaultSlots = ref
+        .watch(userSlotsProvider)
+        .map((n) => MealSlot(name: n, dishIds: []))
+        .toList();
     final dishMap = _buildDishMap(ref.watch(dishesProvider));
 
     return ListView.builder(
@@ -232,9 +237,9 @@ class _WeekView extends ConsumerWidget {
         final date = week.add(Duration(days: i));
         final dayPlan = plan?.days.firstWhere(
               (d) => d.date.isSameDay(date),
-              orElse: () => DayPlan(date: date, mealSlots: MealSlot.defaults),
+              orElse: () => DayPlan(date: date, mealSlots: defaultSlots),
             ) ??
-            DayPlan(date: date, mealSlots: MealSlot.defaults);
+            DayPlan(date: date, mealSlots: defaultSlots);
         return _DayCard(
           date: date,
           dayPlan: dayPlan,
@@ -391,11 +396,15 @@ class _DayView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final defaultSlots = ref
+        .watch(userSlotsProvider)
+        .map((n) => MealSlot(name: n, dishIds: []))
+        .toList();
     final dayPlan = plan?.days.firstWhere(
           (d) => d.date.isSameDay(date),
-          orElse: () => DayPlan(date: date, mealSlots: MealSlot.defaults),
+          orElse: () => DayPlan(date: date, mealSlots: defaultSlots),
         ) ??
-        DayPlan(date: date, mealSlots: MealSlot.defaults);
+        DayPlan(date: date, mealSlots: defaultSlots);
 
     final dishMap = _buildDishMap(ref.watch(dishesProvider));
 
