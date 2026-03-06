@@ -78,6 +78,118 @@ class MealPlanMutationNotifier extends AsyncNotifier<void> {
     }
   }
 
+  /// Copies all 7 days from the previous week into [targetWeek], overwriting
+  /// any existing dishes. Returns false if the source week has no dishes.
+  Future<bool> copyWeek({required DateTime targetWeek}) async {
+    state = const AsyncLoading();
+    bool hadContent = false;
+    state = await AsyncValue.guard(() async {
+      final sourceWeek = targetWeek.subtract(const Duration(days: 7));
+      final sourcePlan =
+          await ref.read(mealPlanRepositoryProvider).fetchWeek(sourceWeek);
+
+      if (sourcePlan == null || sourcePlan.days.every((d) =>
+          d.mealSlots.every((s) => s.dishIds.isEmpty))) {
+        return; // source is empty — caller handles snackbar
+      }
+      hadContent = true;
+
+      final weekId = targetWeek.toIso8601String().substring(0, 10);
+      final newDays = List.generate(7, (i) {
+        final targetDate = targetWeek.add(Duration(days: i));
+        final sourceDay = sourcePlan.days.firstWhere(
+          (d) => d.date.weekday == targetDate.weekday,
+          orElse: () => DayPlan(date: targetDate, mealSlots: MealSlot.defaults),
+        );
+        return DayPlan(
+          date: targetDate,
+          mealSlots: sourceDay.mealSlots
+              .map((s) => MealSlot(
+                    name: s.name,
+                    dishIds: List<String>.from(s.dishIds),
+                  ))
+              .toList(),
+        );
+      });
+
+      await ref.read(mealPlanRepositoryProvider).savePlan(
+            MealPlan(id: weekId, weekStartDate: targetWeek, days: newDays),
+          );
+    });
+    if (state is AsyncError<void>) {
+      AppLogService.instance.error(
+        'copyWeek failed: target=$targetWeek',
+        error: (state as AsyncError<void>).error,
+        stackTrace: (state as AsyncError<void>).stackTrace,
+      );
+    } else if (hadContent) {
+      AppLogService.instance.info('Week copied to $targetWeek');
+    }
+    return hadContent;
+  }
+
+  /// Copies a single day from the previous week into [targetDate], overwriting
+  /// that day's slots. Returns false if the source day has no dishes.
+  Future<bool> copyDay({required DateTime targetDate}) async {
+    state = const AsyncLoading();
+    bool hadContent = false;
+    state = await AsyncValue.guard(() async {
+      final targetWeek = ref.read(selectedWeekProvider);
+      final sourceWeek = targetWeek.subtract(const Duration(days: 7));
+      final sourcePlan =
+          await ref.read(mealPlanRepositoryProvider).fetchWeek(sourceWeek);
+
+      final sourceDay = sourcePlan?.days.firstWhere(
+        (d) => d.date.weekday == targetDate.weekday,
+        orElse: () => DayPlan(date: targetDate, mealSlots: MealSlot.defaults),
+      );
+
+      if (sourceDay == null ||
+          sourceDay.mealSlots.every((s) => s.dishIds.isEmpty)) {
+        return; // source day is empty
+      }
+      hadContent = true;
+
+      final weekId = targetWeek.toIso8601String().substring(0, 10);
+      final existing = ref.read(mealPlanProvider).valueOrNull;
+      final days = existing?.days ??
+          List.generate(
+            7,
+            (i) => DayPlan(
+              date: targetWeek.add(Duration(days: i)),
+              mealSlots: MealSlot.defaults,
+            ),
+          );
+
+      final updatedDays = days.map((day) {
+        if (!day.date.isSameDay(targetDate)) return day;
+        return DayPlan(
+          date: day.date,
+          mealSlots: sourceDay.mealSlots
+              .map((s) => MealSlot(
+                    name: s.name,
+                    dishIds: List<String>.from(s.dishIds),
+                  ))
+              .toList(),
+        );
+      }).toList();
+
+      await ref.read(mealPlanRepositoryProvider).savePlan(
+            MealPlan(id: weekId, weekStartDate: targetWeek, days: updatedDays),
+          );
+    });
+    if (state is AsyncError<void>) {
+      AppLogService.instance.error(
+        'copyDay failed: target=$targetDate',
+        error: (state as AsyncError<void>).error,
+        stackTrace: (state as AsyncError<void>).stackTrace,
+      );
+    } else if (hadContent) {
+      AppLogService.instance.info('Day copied to $targetDate');
+    }
+    return hadContent;
+  }
+
   /// Builds the updated [MealPlan] by reconstructing the object graph immutably.
   /// Creates a blank 7-day plan if [existing] is null (lazy creation).
   MealPlan _buildUpdatedPlan({

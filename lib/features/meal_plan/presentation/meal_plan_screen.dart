@@ -141,9 +141,68 @@ class _WeekHeader extends StatelessWidget {
             onPressed: () => ref.read(selectedWeekProvider.notifier).state =
                 week.add(const Duration(days: 7)),
           ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'More options',
+            onSelected: (value) async {
+              if (value == 'copy_week') {
+                await _confirmCopyWeek(context, ref, week);
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'copy_week',
+                child: ListTile(
+                  leading: Icon(Icons.content_copy),
+                  title: Text('Copy from previous week'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmCopyWeek(
+      BuildContext context, WidgetRef ref, DateTime week) async {
+    final prevWeek = week.subtract(const Duration(days: 7));
+    final prevEnd = prevWeek.add(const Duration(days: 6));
+    final thisEnd = week.add(const Duration(days: 6));
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Copy previous week?'),
+        content: Text(
+          'Replace dishes in ${week.toDisplayDate()} – ${thisEnd.toDisplayDate()} '
+          'with dishes from ${prevWeek.toDisplayDate()} – ${prevEnd.toDisplayDate()}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Copy'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      final hadContent = await ref
+          .read(mealPlanMutationProvider.notifier)
+          .copyWeek(targetWeek: week);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                hadContent ? 'Week copied!' : 'Previous week has no dishes.'),
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -342,13 +401,14 @@ class _DayView extends ConsumerWidget {
 
     return ListView(
       padding: const EdgeInsets.all(12),
-      children: dayPlan.mealSlots
-          .map((slot) => _SlotSection(
-                date: date,
-                slot: slot,
-                dishMap: dishMap,
-              ))
-          .toList(),
+      children: [
+        _CopyDayButton(date: date),
+        ...dayPlan.mealSlots.map((slot) => _SlotSection(
+              date: date,
+              slot: slot,
+              dishMap: dishMap,
+            )),
+      ],
     );
   }
 
@@ -431,6 +491,67 @@ class _SlotSection extends ConsumerWidget {
       ref
           .read(mealPlanMutationProvider.notifier)
           .addDish(date, slot.name, dishId);
+    }
+  }
+}
+
+// ============================================================================
+// Copy day button
+// ============================================================================
+
+class _CopyDayButton extends ConsumerWidget {
+  const _CopyDayButton({required this.date});
+
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton.icon(
+        icon: const Icon(Icons.content_copy, size: 16),
+        label: const Text('Copy from previous week'),
+        onPressed: () => _confirmCopyDay(context, ref),
+      ),
+    );
+  }
+
+  Future<void> _confirmCopyDay(BuildContext context, WidgetRef ref) async {
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final dayName = weekdays[date.weekday - 1];
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Copy from previous week?'),
+        content: Text(
+          "Replace $dayName ${date.toDisplayDate()}'s dishes "
+          'with last $dayName\'s dishes?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Copy'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      final hadContent = await ref
+          .read(mealPlanMutationProvider.notifier)
+          .copyDay(targetDate: date);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(hadContent
+                ? 'Day copied!'
+                : 'Previous week has no dishes for this day.'),
+          ),
+        );
+      }
     }
   }
 }

@@ -35,4 +35,10 @@ class MealPlanRepository {
 
   Future<void> savePlan(MealPlan plan) =>
       _plans.doc(plan.id).set(plan.toFirestore());
+
+  /// One-time read of a week's plan (used for copy operations).
+  Future<MealPlan?> fetchWeek(DateTime monday) async {
+    final doc = await _plans.doc(_weekId(monday)).get();
+    return doc.exists ? MealPlan.fromFirestore(doc) : null;
+  }
 }
