@@ -103,6 +103,7 @@ Mobile-App/
 │   │   │   ├── domain/dish_model.dart        # Dish, Ingredient (extensible)
 │   │   │   └── presentation/
 │   │   │       ├── dish_library_screen.dart  # List of dishes with FAB, edit/delete
+│   │   │       ├── dish_detail_screen.dart   # Read-only detail view (outside ShellRoute)
 │   │   │       ├── dish_form_screen.dart     # Add/Edit dish form (outside ShellRoute)
 │   │   │       └── dish_providers.dart       # dishesProvider, dishMutationProvider
 │   │   └── shopping_list/
@@ -213,7 +214,9 @@ dart run build_runner watch  # watch mode
 
 ### Dish Library
 - Full CRUD: Firestore subcollection `users/{uid}/dishes/{dishId}`
-- `dish_form_screen.dart` is **outside** `ShellRoute` (no bottom nav while editing)
+- Navigation flow: list → detail (`/dishes/detail`) → edit form (`/dishes/form`)
+- Both detail and form screens are **outside** `ShellRoute` (full screen, no bottom nav)
+- Tap dish tile → detail; popup "Edit" → form directly
 - Navigate to form: `context.push(AppRoutes.dishForm)` (add) or `context.push(AppRoutes.dishForm, extra: dish)` (edit)
 - Nutrition totals (calories/protein/fat/carbs) computed live from ingredients — never stored
 - Ingredient amounts stored as `double` per serving; `_fmtNum()` helper trims trailing `.0` in UI
