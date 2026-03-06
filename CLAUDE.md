@@ -192,7 +192,31 @@ dart run build_runner watch  # watch mode
 - Do not add comments unless the logic is non-obvious.
 - Match the style, patterns, and conventions already present in the codebase.
 - Do not auto-commit unless explicitly asked.
-- Security: never hardcode secrets, API keys, or credentials.
+
+---
+
+## Security Rules (mandatory — apply to every session)
+
+### No credential exposure
+- **Never hardcode** API keys, tokens, passwords, secrets, or connection strings in any source file.
+- **Never commit** credential files. The following are gitignored and must stay that way:
+  - `android/app/google-services.json`
+  - `ios/Runner/GoogleService-Info.plist`
+  - `lib/core/firebase/firebase_options.dart`
+  - `env.json`, `*.env`, `.env.*`, `key.properties`
+- Firebase config in Dart must always come from the gitignored `firebase_options.dart` — never inline values.
+- If a secret is needed at build time, pass it via `--dart-define` or `--dart-define-from-file`.
+
+### Security check before every commit
+Before committing or pushing, verify:
+1. `git diff --staged` contains no API keys, tokens, or passwords.
+2. No new credential files are being staged (`git status`).
+3. `.gitignore` still covers all sensitive files.
+
+### If a credential is found exposed
+1. **Revoke it immediately** at the issuing service (GitHub, Firebase Console, etc.).
+2. Remove it from any local config files (e.g. `~/.claude/settings.json`).
+3. Rotate to a new credential and store it in a password manager — not in plain-text files.
 
 ---
 
