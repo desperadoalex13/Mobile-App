@@ -531,12 +531,12 @@ class _IngredientDialogState extends State<_IngredientDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.initial != null ? 'Edit Ingredient' : 'Add Ingredient'),
-      scrollable: true,
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             TextFormField(
               controller: _nameCtrl,
               textCapitalization: TextCapitalization.sentences,
@@ -557,14 +557,17 @@ class _IngredientDialogState extends State<_IngredientDialog> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _unit,
-                  decoration: const InputDecoration(labelText: 'Unit'),
-                  items: _units
-                      .map((u) =>
-                          DropdownMenuItem(value: u, child: Text(u)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _unit = v!),
+                SizedBox(
+                  width: 100,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _unit,
+                    decoration: const InputDecoration(labelText: 'Unit'),
+                    items: _units
+                        .map((u) =>
+                            DropdownMenuItem(value: u, child: Text(u)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _unit = v!),
+                  ),
                 ),
               ],
             ),
@@ -594,6 +597,7 @@ class _IngredientDialogState extends State<_IngredientDialog> {
             ),
           ],
         ),
+      ),
       ),
       actions: [
         TextButton(
