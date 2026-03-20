@@ -1,10 +1,22 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging/app_log_service.dart';
 import '../data/dish_repository.dart';
 import '../domain/dish_model.dart';
+import '../domain/product_model.dart';
+
+/// Loads the bundled product database from assets once and caches it.
+final productsProvider = FutureProvider<List<ProductEntry>>((ref) async {
+  final raw = await rootBundle.loadString('assets/data/products.json');
+  final list = jsonDecode(raw) as List<dynamic>;
+  return list
+      .map((e) => ProductEntry.fromJson(e as Map<String, dynamic>))
+      .toList();
+});
 
 /// Live stream of all dishes for the signed-in user.
 final dishesProvider = StreamProvider<List<Dish>>((ref) {

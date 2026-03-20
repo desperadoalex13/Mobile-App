@@ -89,15 +89,20 @@ Mobile-App/
 │   │   │   └── app_log_service.dart          # Singleton file logger (daily log, uid, ISO timestamps)
 │   ├── features/
 │   │   ├── auth/
-│   │   │   ├── data/auth_repository.dart
+│   │   │   ├── data/auth_repository.dart     # signIn/register/signOut/getProfile/watchProfile/updateProfile
+│   │   │   ├── domain/user_profile.dart      # UserProfile model; mealSlots: List<String>; defaultMealSlots
 │   │   │   └── presentation/
 │   │   │       ├── auth_controller.dart
+│   │   │       ├── profile_providers.dart    # userProfileProvider, userSlotsProvider, profileMutationProvider
 │   │   │       ├── login_screen.dart
 │   │   │       ├── register_screen.dart
 │   │   │       └── splash_screen.dart
 │   │   ├── meal_plan/
-│   │   │   ├── domain/meal_plan_model.dart   # MealPlan, DayPlan, MealSlot
-│   │   │   └── presentation/meal_plan_screen.dart
+│   │   │   ├── data/meal_plan_repository.dart  # watchWeek / savePlan / fetchWeek
+│   │   │   ├── domain/meal_plan_model.dart     # MealPlan, DayPlan, MealSlot
+│   │   │   └── presentation/
+│   │   │       ├── meal_plan_screen.dart       # Week + 7-day TabBarView; slot defaults from userSlotsProvider
+│   │   │       └── meal_plan_providers.dart    # selectedWeekProvider, mealPlanProvider, mealPlanMutationProvider
 │   │   ├── dish_library/
 │   │   │   ├── data/dish_repository.dart     # Firestore CRUD: users/{uid}/dishes/{id}
 │   │   │   ├── domain/dish_model.dart        # Dish, Ingredient (extensible)
@@ -106,6 +111,9 @@ Mobile-App/
 │   │   │       ├── dish_detail_screen.dart   # Read-only detail view (outside ShellRoute)
 │   │   │       ├── dish_form_screen.dart     # Add/Edit dish form (outside ShellRoute)
 │   │   │       └── dish_providers.dart       # dishesProvider, dishMutationProvider
+│   │   ├── settings/
+│   │   │   └── presentation/
+│   │   │       └── settings_screen.dart      # Meal slot management: add / rename / delete / reorder
 │   │   └── shopping_list/
 │   │       ├── domain/shopping_list_model.dart
 │   │       └── presentation/shopping_list_screen.dart
@@ -247,11 +255,30 @@ Before committing or pushing, verify:
 - Nutrition data: manual entry only for MVP; product database planned post-MVP
 - `DishMutationController` logs all save/delete successes and failures
 
+### Meal Plan
+- Firestore: `users/{uid}/mealPlans/{YYYY-MM-DD}` (Monday as document key)
+- `selectedWeekProvider` (StateProvider<DateTime>) — holds current Monday
+- `mealPlanProvider` (StreamProvider<MealPlan?>) — live watch; null = no plan yet (lazy creation)
+- `mealPlanMutationProvider` (AsyncNotifier) — addDish / removeDish / copyWeek / copyDay
+- `TabController(length: 8)` — Week overview + 7 individual day tabs
+- Slot defaults come from `userSlotsProvider` (not hardcoded `MealSlot.defaults`)
+- Copy week / copy day from previous week — returns `bool hadContent` for snackbar feedback
+
+### Configurable Meal Slots
+- `UserProfile.mealSlots: List<String>` stored in Firestore at `users/{uid}`
+- `UserProfile.defaultMealSlots = ['Breakfast', 'Lunch', 'Dinner']` — fallback only
+- `userProfileProvider` (StreamProvider) — live stream of profile document
+- `userSlotsProvider` (Provider<List<String>>) — derived from profile; falls back to defaults
+- `profileMutationProvider` (AsyncNotifier) — `updateSlots(List<String>)` calls `updateProfile(uid, {mealSlots: ...})`
+- Settings screen (`/settings`, 4th bottom nav tab): `ReorderableListView` supporting add / rename / delete / reorder
+- Rename/delete only affects new lazy-created days; existing Firestore plan docs keep their slot names
+
 ### Testing
 - **82 tests** in `test/` — all pass, zero analyzer issues
 - `mocktail: ^1.0.4` (not ^0.3.0 — conflicts with custom_lint)
 - `// ignore: subtype_of_sealed_class` required for mocking Firestore sealed classes
 - Widget test stubs for `authControllerProvider` must **extend `AuthController`**, not `AsyncNotifier<void>` directly
+- Use `dart analyze lib/` instead of `flutter analyze` to avoid OOM crash on Windows
 
 ---
 
@@ -260,4 +287,5 @@ Before committing or pushing, verify:
 - `firebase_options.dart` is manually maintained (no FlutterFire CLI — Windows auth restrictions). Regenerate by copying values from Firebase console when project config changes.
 - `flutter analyze` must pass with zero issues before committing.
 - Web platform folder (`web/`) is not generated yet — run `flutter create . --platforms web` to add it.
-- `ScaffoldWithNavBar` renders a route-aware title (Meal Plan / Dishes / Shopping) in its AppBar.
+- `ScaffoldWithNavBar` renders a route-aware title (Meal Plan / Dishes / Shopping / Settings) in its AppBar — 4 bottom nav tabs.
+- `flutter analyze` may OOM on Windows with Dart 3.11 (`analysis server exited with code -1073740791`). Use `dart analyze lib/` instead — produces identical results without the crash.

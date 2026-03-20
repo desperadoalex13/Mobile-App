@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' hide rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/dish_repository.dart';
 import '../domain/dish_model.dart';
+import '../domain/product_model.dart';
 import 'dish_providers.dart';
 
 class DishFormScreen extends ConsumerStatefulWidget {
@@ -454,16 +455,16 @@ class _NutrientCell extends StatelessWidget {
 // Ingredient dialog
 // ============================================================================
 
-class _IngredientDialog extends StatefulWidget {
+class _IngredientDialog extends ConsumerStatefulWidget {
   const _IngredientDialog({this.initial});
 
   final Ingredient? initial;
 
   @override
-  State<_IngredientDialog> createState() => _IngredientDialogState();
+  ConsumerState<_IngredientDialog> createState() => _IngredientDialogState();
 }
 
-class _IngredientDialogState extends State<_IngredientDialog> {
+class _IngredientDialogState extends ConsumerState<_IngredientDialog> {
   static const _units = ['g', 'ml', 'kg', 'L', 'piece', 'tbsp', 'tsp'];
 
   final _formKey = GlobalKey<FormState>();
@@ -474,6 +475,7 @@ class _IngredientDialogState extends State<_IngredientDialog> {
   late final TextEditingController _fatCtrl;
   late final TextEditingController _carbsCtrl;
   late String _unit;
+  ProductEntry? _linkedProduct;
 
   @override
   void initState() {
@@ -491,6 +493,7 @@ class _IngredientDialogState extends State<_IngredientDialog> {
     _carbsCtrl = TextEditingController(
         text: i != null ? _fmtNum(i.carbsPerServing) : '');
     _unit = i?.unit ?? 'g';
+    _amountCtrl.addListener(_recalcFromProduct);
   }
 
   @override
@@ -504,6 +507,32 @@ class _IngredientDialogState extends State<_IngredientDialog> {
     super.dispose();
   }
 
+  void _recalcFromProduct() {
+    final p = _linkedProduct;
+    if (p == null) return;
+    final amount = double.tryParse(_amountCtrl.text) ?? 0;
+    final factor = amount / 100;
+    _calCtrl.text = _fmtNum(p.kcalPer100 * factor);
+    _protCtrl.text = _fmtNum(p.proteinPer100 * factor);
+    _fatCtrl.text = _fmtNum(p.fatPer100 * factor);
+    _carbsCtrl.text = _fmtNum(p.carbsPer100 * factor);
+  }
+
+  Future<void> _pickFromDatabase() async {
+    final product = await showDialog<ProductEntry>(
+      context: context,
+      builder: (_) => const _ProductSearchDialog(),
+    );
+    if (product == null) return;
+    setState(() {
+      _linkedProduct = product;
+      _nameCtrl.text = product.name;
+      _unit = product.defaultUnit;
+      if (_amountCtrl.text.isEmpty) _amountCtrl.text = '100';
+    });
+    _recalcFromProduct();
+  }
+
   String? _validateNumber(String? v, {bool required = true}) {
     if (v == null || v.isEmpty) return required ? 'Required' : null;
     final n = double.tryParse(v);
@@ -513,9 +542,11 @@ class _IngredientDialogState extends State<_IngredientDialog> {
 
   void _confirm() {
     if (!_formKey.currentState!.validate()) return;
+    final productId = _linkedProduct?.id ??
+        widget.initial?.productId ??
+        'manual_${DateTime.now().millisecondsSinceEpoch}';
     final ingredient = Ingredient(
-      productId: widget.initial?.productId ??
-          'manual_${DateTime.now().millisecondsSinceEpoch}',
+      productId: productId,
       name: _nameCtrl.text.trim(),
       amountPerServing: double.parse(_amountCtrl.text),
       unit: _unit,
@@ -537,6 +568,17 @@ class _IngredientDialogState extends State<_IngredientDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+            OutlinedButton.icon(
+              icon: const Icon(Icons.search, size: 18),
+              label: Text(
+                _linkedProduct == null
+                    ? 'Search database'
+                    : 'Change: ${_linkedProduct!.name}',
+                overflow: TextOverflow.ellipsis,
+              ),
+              onPressed: _pickFromDatabase,
+            ),
+            const SizedBox(height: 12),
             TextFormField(
               controller: _nameCtrl,
               textCapitalization: TextCapitalization.sentences,
@@ -571,6 +613,16 @@ class _IngredientDialogState extends State<_IngredientDialog> {
                 ),
               ],
             ),
+            if (_linkedProduct != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'Nutrition auto-calculated per entered amount',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                ),
+              ),
             const SizedBox(height: 12),
             _NumberField(
               controller: _calCtrl,
@@ -631,6 +683,121 @@ class _NumberField extends StatelessWidget {
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       decoration: InputDecoration(labelText: label),
       validator: validate,
+    );
+  }
+}
+
+// ============================================================================
+// Product search dialog
+// ============================================================================
+
+class _ProductSearchDialog extends ConsumerStatefulWidget {
+  const _ProductSearchDialog();
+
+  @override
+  ConsumerState<_ProductSearchDialog> createState() =>
+      _ProductSearchDialogState();
+}
+
+class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl.addListener(() => setState(() => _query = _searchCtrl.text));
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final productsAsync = ref.watch(productsProvider);
+    return Dialog(
+      child: SizedBox(
+        width: 360,
+        height: 520,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Search database',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _searchCtrl,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search products…',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: productsAsync.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+                data: (products) {
+                  final filtered = _query.trim().isEmpty
+                      ? products
+                      : products
+                          .where((p) => p.name
+                              .toLowerCase()
+                              .contains(_query.toLowerCase().trim()))
+                          .toList();
+                  if (filtered.isEmpty) {
+                    return const Center(
+                      child: Text('No products found.'),
+                    );
+                  }
+                  return ListView.builder(
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) {
+                      final p = filtered[i];
+                      return ListTile(
+                        dense: true,
+                        title: Text(p.name),
+                        subtitle: Text(
+                          '${p.kcalPer100.round()} kcal · '
+                          'P ${p.proteinPer100}g · '
+                          'F ${p.fatPer100}g · '
+                          'C ${p.carbsPer100}g'
+                          '  per 100 ${p.defaultUnit}',
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        onTap: () => Navigator.of(context).pop(p),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

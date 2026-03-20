@@ -230,23 +230,29 @@ class _WeekView extends ConsumerWidget {
         .toList();
     final dishMap = _buildDishMap(ref.watch(dishesProvider));
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(8),
-      itemCount: 7,
-      itemBuilder: (context, i) {
-        final date = week.add(Duration(days: i));
-        final dayPlan = plan?.days.firstWhere(
-              (d) => d.date.isSameDay(date),
-              orElse: () => DayPlan(date: date, mealSlots: defaultSlots),
+    final dayPlans = [
+      for (var i = 0; i < 7; i++)
+        plan?.days.firstWhere(
+              (d) => d.date.isSameDay(week.add(Duration(days: i))),
+              orElse: () => DayPlan(
+                  date: week.add(Duration(days: i)), mealSlots: defaultSlots),
             ) ??
-            DayPlan(date: date, mealSlots: defaultSlots);
-        return _DayCard(
-          date: date,
-          dayPlan: dayPlan,
-          dishMap: dishMap,
-          onTap: () => onDayTap(i),
-        );
-      },
+            DayPlan(
+                date: week.add(Duration(days: i)), mealSlots: defaultSlots),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(8),
+      children: [
+        _WeekNutritionSummary(dayPlans: dayPlans, dishMap: dishMap),
+        for (var i = 0; i < 7; i++)
+          _DayCard(
+            date: week.add(Duration(days: i)),
+            dayPlan: dayPlans[i],
+            dishMap: dishMap,
+            onTap: () => onDayTap(i),
+          ),
+      ],
     );
   }
 
@@ -596,6 +602,71 @@ class _CopyDayButton extends ConsumerWidget {
   return (kcal: kcal, protein: protein, fat: fat, carbs: carbs);
 }
 
+class _WeekNutritionSummary extends StatelessWidget {
+  const _WeekNutritionSummary(
+      {required this.dayPlans, required this.dishMap});
+
+  final List<DayPlan> dayPlans;
+  final Map<String, Dish> dishMap;
+
+  @override
+  Widget build(BuildContext context) {
+    double kcal = 0, protein = 0, fat = 0, carbs = 0;
+    for (final day in dayPlans) {
+      final n = _calcDayNutrition(day, dishMap);
+      kcal += n.kcal;
+      protein += n.protein;
+      fat += n.fat;
+      carbs += n.carbs;
+    }
+    if (kcal == 0) return const SizedBox.shrink();
+
+    String fmt(double v) =>
+        v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(1);
+
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      color: colorScheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        child: Column(
+          children: [
+            Text(
+              'Weekly Total',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                _NutrientChip(
+                    label: 'kcal',
+                    value: kcal.round().toString(),
+                    onContainer: colorScheme.onSecondaryContainer),
+                _NutrientChip(
+                    label: 'Protein',
+                    value: '${fmt(protein)}g',
+                    onContainer: colorScheme.onSecondaryContainer),
+                _NutrientChip(
+                    label: 'Fat',
+                    value: '${fmt(fat)}g',
+                    onContainer: colorScheme.onSecondaryContainer),
+                _NutrientChip(
+                    label: 'Carbs',
+                    value: '${fmt(carbs)}g',
+                    onContainer: colorScheme.onSecondaryContainer),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _DayNutritionSummary extends StatelessWidget {
   const _DayNutritionSummary({required this.dayPlan, required this.dishMap});
 
@@ -629,14 +700,17 @@ class _DayNutritionSummary extends StatelessWidget {
 }
 
 class _NutrientChip extends StatelessWidget {
-  const _NutrientChip({required this.label, required this.value});
+  const _NutrientChip(
+      {required this.label, required this.value, this.onContainer});
 
   final String label;
   final String value;
+  final Color? onContainer;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final color =
+        onContainer ?? Theme.of(context).colorScheme.onPrimaryContainer;
     return Expanded(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -645,13 +719,13 @@ class _NutrientChip extends StatelessWidget {
             value,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.onPrimaryContainer,
+                  color: color,
                 ),
           ),
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onPrimaryContainer,
+                  color: color,
                 ),
           ),
         ],
