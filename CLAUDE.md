@@ -310,6 +310,24 @@ Before committing or pushing, verify:
 - Settings screen (`/settings`, 4th bottom nav tab): `ReorderableListView` supporting add / rename / delete / reorder
 - Rename/delete only affects new lazy-created days; existing Firestore plan docs keep their slot names
 
+### Multilanguage (i18n)
+- **Languages**: English (`en`) + Ukrainian (`uk`); extensible — add a new `.arb` file and re-run `flutter gen-l10n`
+- **ARB files**: `lib/l10n/app_en.arb` (template) + `lib/l10n/app_uk.arb` (~90 keys each)
+- **Code generation**: `flutter gen-l10n` reads `l10n.yaml` → outputs `lib/l10n/app_localizations.dart` + per-locale files
+- **`l10n.yaml`**: `arb-dir: lib/l10n`, `template-arb-file: app_en.arb`, `nullable-getter: false`
+- **`pubspec.yaml`**: `flutter: generate: true` + `intl: ^0.20.2` + `shared_preferences` for persistence
+- **Locale provider**: `lib/core/locale/locale_provider.dart`
+  - `localeProvider` — `StateProvider<Locale>` initialized to saved locale at startup
+  - `loadSavedLocale()` — reads from `SharedPreferences` (called in `main()` before `runApp`)
+  - `saveLocale(Locale)` — persists locale code to `SharedPreferences`
+- **Extension**: `lib/l10n/l10n.dart`
+  - `context.l10n` — shorthand for `AppLocalizations.of(context)`
+  - `context.localizeLabel(String)` — translates English Firestore label keys (`'Breakfast'` → `'Сніданок'`)
+  - `context.dayAbbr(int weekday)` — returns localized weekday abbreviation (1=Mon…7=Sun)
+- **Dish labels** stored as English keys in Firestore (`'Breakfast'`/`'Lunch'`/`'Dinner'`); translated in UI only via `localizeLabel` — no data migration needed
+- **Settings screen** — Language section at top: two tiles (English / Ukrainian) with checkmark on active; tap to switch locale instantly and persist
+- All widget tests that render screens must wrap with `AppLocalizations.localizationsDelegates` + `supportedLocales`
+
 ### Testing
 - **82 tests** in `test/` — all pass, zero analyzer issues
 - `mocktail: ^1.0.4` (not ^0.3.0 — conflicts with custom_lint)
@@ -324,5 +342,7 @@ Before committing or pushing, verify:
 - `firebase_options.dart` is manually maintained (no FlutterFire CLI — Windows auth restrictions). Regenerate by copying values from Firebase console when project config changes.
 - `flutter analyze` must pass with zero issues before committing.
 - Web platform folder (`web/`) is not generated yet — run `flutter create . --platforms web` to add it.
-- `ScaffoldWithNavBar` renders a route-aware title (Meal Plan / Dishes / Shopping / Settings) in its AppBar — 4 bottom nav tabs.
+- `ScaffoldWithNavBar` renders a route-aware localized title in its AppBar — uses `context.l10n` inside `build()`.
 - `flutter analyze` may OOM on Windows with Dart 3.11 (`analysis server exited with code -1073740791`). Use `dart analyze lib/` instead — produces identical results without the crash.
+- After editing ARB files, run `flutter gen-l10n` to regenerate `lib/l10n/app_localizations*.dart`. The command reads `l10n.yaml` automatically.
+- `intl` must be pinned to `^0.20.2` (Flutter SDK pins it; `^0.19.0` causes version conflict).

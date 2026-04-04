@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../data/csv_dish_parser.dart';
@@ -40,7 +41,7 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Import failed. Please try again.'),
+          content: Text(context.l10n.importFailed),
           backgroundColor: Theme.of(context).colorScheme.error,
         ));
       }
@@ -63,9 +64,10 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
     final dishes = CsvDishParser.parse(utf8.decode(bytes, allowMalformed: true));
 
     if (!mounted) return;
+    final l10n = context.l10n;
     if (dishes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No dishes found in the selected file.')),
+        SnackBar(content: Text(l10n.noDishesInFile)),
       );
       return;
     }
@@ -73,61 +75,58 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Import from CSV?'),
-        content: Text(
-          'Found ${dishes.length} dish${dishes.length == 1 ? '' : 'es'}. '
-          'They will be added to your library.',
-        ),
+        title: Text(l10n.importCsvDialogTitle),
+        content: Text(l10n.importCsvDialogContent(dishes.length)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Import'),
+            child: Text(l10n.importFromCsvButton),
           ),
         ],
       ),
     );
     if (confirmed != true || !mounted) return;
-    await _saveDishes(dishes, '${dishes.length} dishes imported successfully.');
+    await _saveDishes(dishes, context.l10n.csvImportSuccess(dishes.length));
   }
 
   Future<void> _confirmImport() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Import starter dishes?'),
-        content: const Text(
-          '7 breakfast dishes will be added to your library. '
-          'Existing dishes with the same ID will be overwritten.',
-        ),
+        title: Text(l10n.importStarterDialogTitle),
+        content: Text(l10n.importStarterDialogContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Import'),
+            child: Text(l10n.importStarterButton),
           ),
         ],
       ),
     );
     if (confirmed != true || !mounted) return;
-    await _saveDishes(DishSeeder.starterDishes, '7 dishes imported successfully.');
+    await _saveDishes(
+        DishSeeder.starterDishes, context.l10n.starterImportSuccess);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final dishesAsync = ref.watch(dishesProvider);
 
     ref.listen(dishMutationProvider, (_, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Operation failed. Please try again.'),
+            content: Text(l10n.operationFailed),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -140,14 +139,14 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
         children: [
           FloatingActionButton.small(
             heroTag: 'import-csv',
-            tooltip: 'Import from CSV',
+            tooltip: l10n.importCsvTooltip,
             onPressed: _importing ? null : _importFromCsv,
             child: const Icon(Icons.upload_file_outlined),
           ),
           const SizedBox(height: 8),
           FloatingActionButton(
             heroTag: 'add-dish',
-            tooltip: 'Add dish',
+            tooltip: l10n.addDishTooltip,
             onPressed: () => context.push(AppRoutes.dishForm),
             child: const Icon(Icons.add),
           ),
@@ -156,7 +155,7 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
       body: dishesAsync.when(
         loading: () => const LoadingIndicator(),
         error: (e, _) => ErrorView(
-          message: 'Could not load dishes.',
+          message: l10n.loadDishesError,
           onRetry: () => ref.invalidate(dishesProvider),
         ),
         data: (dishes) {
@@ -185,7 +184,7 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
                     child: filtered.isEmpty
                         ? Center(
                             child: Text(
-                              'No "$_activeFilter" dishes.',
+                              l10n.noFilteredDishes(_activeFilter),
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -204,23 +203,23 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
                 ],
               ),
               if (_importing)
-                const Positioned(
+                Positioned(
                   top: 8,
                   right: 16,
                   child: Card(
                     child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 14,
                             height: 14,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                          SizedBox(width: 8),
-                          Text('Importing…'),
+                          const SizedBox(width: 8),
+                          Text(l10n.importingIndicator),
                         ],
                       ),
                     ),
@@ -246,13 +245,14 @@ class _LabelFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
           FilterChip(
-            label: const Text('All'),
+            label: Text(l10n.all),
             selected: active.isEmpty,
             onSelected: (_) => onChanged(''),
           ),
@@ -260,7 +260,7 @@ class _LabelFilterBar extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(left: 8),
               child: FilterChip(
-                label: Text(label),
+                label: Text(context.localizeLabel(label)),
                 selected: active == label,
                 onSelected: (_) => onChanged(active == label ? '' : label),
               ),
@@ -285,6 +285,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -298,12 +299,12 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No dishes yet',
+              l10n.noDishesTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'Build your personal recipe library.\nTap the button below to add your first dish.',
+              l10n.noDishesDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -313,19 +314,19 @@ class _EmptyState extends StatelessWidget {
             FilledButton.icon(
               onPressed: onAdd,
               icon: const Icon(Icons.add),
-              label: const Text('Add Dish'),
+              label: Text(l10n.addDishButton),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: onImport,
               icon: const Icon(Icons.download_outlined),
-              label: const Text('Import starter dishes'),
+              label: Text(l10n.importStarterButton),
             ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: onImportCsv,
               icon: const Icon(Icons.upload_file_outlined),
-              label: const Text('Import from CSV'),
+              label: Text(l10n.importFromCsvButton),
             ),
           ],
         ),
@@ -345,14 +346,15 @@ class _DishTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final servingLabel =
-        '${dish.servings} serving${dish.servings == 1 ? '' : 's'}';
-    final calorieLabel = '${dish.totalCalories.round()} kcal';
-    final labelText = dish.labels.isEmpty ? '' : '  ·  ${dish.labels.join(', ')}';
+    final l10n = context.l10n;
+    final calorieLabel = '${dish.totalCalories.round()} ${l10n.kcal}';
+    final labelText = dish.labels.isEmpty
+        ? ''
+        : '  ·  ${dish.labels.map(context.localizeLabel).join(', ')}';
 
     return ListTile(
       title: Text(dish.name),
-      subtitle: Text('$servingLabel · $calorieLabel$labelText'),
+      subtitle: Text('$calorieLabel$labelText'),
       trailing: PopupMenuButton<String>(
         onSelected: (value) {
           if (value == 'edit') {
@@ -361,9 +363,9 @@ class _DishTile extends ConsumerWidget {
             _confirmDelete(context, ref);
           }
         },
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Edit')),
-          PopupMenuItem(value: 'delete', child: Text('Delete')),
+        itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+          PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
         ],
       ),
       onTap: () => context.push(AppRoutes.dishDetail, extra: dish),
@@ -371,24 +373,23 @@ class _DishTile extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete dish?'),
-        content: Text(
-          'Delete "${dish.name}"? This cannot be undone.',
-        ),
+        title: Text(l10n.deleteDishTitle),
+        content: Text(l10n.deleteDishContent(dish.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               ref.read(dishMutationProvider.notifier).deleteDish(dish.id);
             },
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),

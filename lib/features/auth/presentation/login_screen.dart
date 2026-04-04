@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../l10n/l10n.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -35,13 +36,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final authState = ref.watch(authControllerProvider);
 
     ref.listen(authControllerProvider, (_, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_friendlyError(next.error)),
+            content: Text(_friendlyError(next.error, l10n)),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -66,7 +68,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Meal Planner',
+                    l10n.appTitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -74,7 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to continue',
+                    l10n.loginSubtitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -85,14 +87,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.emailLabel,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: const OutlineInputBorder(),
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Enter your email';
-                      if (!v.contains('@')) return 'Enter a valid email';
+                      if (v == null || v.trim().isEmpty) {
+                        return l10n.emailEmptyError;
+                      }
+                      if (!v.contains('@')) return l10n.emailInvalidError;
                       return null;
                     },
                   ),
@@ -103,7 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: l10n.passwordLabel,
                       prefixIcon: const Icon(Icons.lock_outlined),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
@@ -117,8 +121,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Enter your password';
-                      if (v.length < 6) return 'Password must be at least 6 characters';
+                      if (v == null || v.isEmpty) return l10n.passwordEmptyError;
+                      if (v.length < 6) return l10n.passwordTooShortError;
                       return null;
                     },
                   ),
@@ -131,19 +135,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Sign In'),
+                        : Text(l10n.signIn),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account?",
+                        l10n.noAccount,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       TextButton(
                         onPressed: () => context.go(AppRoutes.register),
-                        child: const Text('Register'),
+                        child: Text(l10n.register),
                       ),
                     ],
                   ),
@@ -156,23 +160,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  String _friendlyError(Object error) {
+  String _friendlyError(Object error, AppLocalizations l10n) {
     final msg = error.toString();
-    if (msg.contains('user-not-found') || msg.contains('wrong-password') || msg.contains('invalid-credential')) {
-      return 'Invalid email or password.';
+    if (msg.contains('user-not-found') ||
+        msg.contains('wrong-password') ||
+        msg.contains('invalid-credential')) {
+      return l10n.invalidCredentials;
     }
-    if (msg.contains('too-many-requests')) {
-      return 'Too many attempts. Please try again later.';
+    if (msg.contains('too-many-requests')) return l10n.tooManyAttempts;
+    if (msg.contains('network-request-failed')) return l10n.noInternet;
+    if (msg.contains('operation-not-allowed') ||
+        msg.contains('configuration-not-found')) {
+      return l10n.signInNotEnabled;
     }
-    if (msg.contains('network-request-failed')) {
-      return 'No internet connection.';
-    }
-    if (msg.contains('operation-not-allowed') || msg.contains('configuration-not-found')) {
-      return 'Email/password sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.';
-    }
-    if (msg.contains('permission-denied')) {
-      return 'Database permission denied. Check Firestore security rules.';
-    }
-    return 'Something went wrong. Please try again.';
+    if (msg.contains('permission-denied')) return l10n.permissionDenied;
+    return l10n.genericError;
   }
 }

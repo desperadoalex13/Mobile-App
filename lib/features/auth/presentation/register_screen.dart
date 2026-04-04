@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../l10n/l10n.dart';
 import 'auth_controller.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -38,13 +39,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final authState = ref.watch(authControllerProvider);
 
     ref.listen(authControllerProvider, (_, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_friendlyError(next.error)),
+            content: Text(_friendlyError(next.error, l10n)),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -69,7 +71,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Create Account',
+                    l10n.createAccount,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -77,7 +79,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Start planning your meals today',
+                    l10n.registerSubtitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -88,14 +90,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.emailLabel,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: const OutlineInputBorder(),
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Enter your email';
-                      if (!v.contains('@')) return 'Enter a valid email';
+                      if (v == null || v.trim().isEmpty) {
+                        return l10n.emailEmptyError;
+                      }
+                      if (!v.contains('@')) return l10n.emailInvalidError;
                       return null;
                     },
                   ),
@@ -105,7 +109,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: l10n.passwordLabel,
                       prefixIcon: const Icon(Icons.lock_outlined),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
@@ -119,8 +123,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Enter a password';
-                      if (v.length < 6) return 'Password must be at least 6 characters';
+                      if (v == null || v.isEmpty) return l10n.passwordEmptyError;
+                      if (v.length < 6) return l10n.passwordTooShortError;
                       return null;
                     },
                   ),
@@ -131,7 +135,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
-                      labelText: 'Confirm Password',
+                      labelText: l10n.confirmPasswordLabel,
                       prefixIcon: const Icon(Icons.lock_outlined),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
@@ -145,8 +149,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Confirm your password';
-                      if (v != _passwordController.text) return 'Passwords do not match';
+                      if (v == null || v.isEmpty) {
+                        return l10n.confirmPasswordEmptyError;
+                      }
+                      if (v != _passwordController.text) {
+                        return l10n.passwordMismatchError;
+                      }
                       return null;
                     },
                   ),
@@ -159,19 +167,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Create Account'),
+                        : Text(l10n.createAccount),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account?',
+                        l10n.hasAccount,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       TextButton(
                         onPressed: () => context.go(AppRoutes.login),
-                        child: const Text('Sign In'),
+                        child: Text(l10n.signIn),
                       ),
                     ],
                   ),
@@ -184,26 +192,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  String _friendlyError(Object error) {
+  String _friendlyError(Object error, AppLocalizations l10n) {
     final msg = error.toString();
-    if (msg.contains('email-already-in-use')) {
-      return 'An account with this email already exists.';
+    if (msg.contains('email-already-in-use')) return l10n.emailInUse;
+    if (msg.contains('invalid-email')) return l10n.invalidEmail;
+    if (msg.contains('weak-password')) return l10n.weakPassword;
+    if (msg.contains('network-request-failed')) return l10n.noInternet;
+    if (msg.contains('operation-not-allowed') ||
+        msg.contains('configuration-not-found')) {
+      return l10n.signInNotEnabled;
     }
-    if (msg.contains('invalid-email')) {
-      return 'Invalid email address.';
-    }
-    if (msg.contains('weak-password')) {
-      return 'Password is too weak.';
-    }
-    if (msg.contains('network-request-failed')) {
-      return 'No internet connection.';
-    }
-    if (msg.contains('operation-not-allowed') || msg.contains('configuration-not-found')) {
-      return 'Email/password sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.';
-    }
-    if (msg.contains('permission-denied')) {
-      return 'Database permission denied. Check Firestore security rules.';
-    }
-    return 'Something went wrong. Please try again.';
+    if (msg.contains('permission-denied')) return l10n.permissionDenied;
+    return l10n.genericError;
   }
 }

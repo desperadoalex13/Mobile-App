@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/dish_model.dart';
 
 class DishDetailScreen extends StatelessWidget {
@@ -11,11 +12,10 @@ class DishDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final hasIngredients = dish.ingredients.isNotEmpty;
     final hasInstructions = dish.instructions.isNotEmpty;
-    final servingLabel =
-        '${dish.servings} serving${dish.servings == 1 ? '' : 's'}';
 
     return Scaffold(
       appBar: AppBar(
@@ -23,7 +23,7 @@ class DishDetailScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit',
+            tooltip: l10n.editTooltip,
             onPressed: () => context.push(AppRoutes.dishForm, extra: dish),
           ),
         ],
@@ -39,14 +39,14 @@ class DishDetailScreen extends StatelessWidget {
               runSpacing: 4,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Chip(label: Text(servingLabel)),
                 if (hasIngredients)
                   Chip(
-                    label: Text('${dish.totalCalories.round()} kcal'),
+                    label: Text(
+                        '${dish.totalCalories.round()} ${l10n.kcal}'),
                   ),
                 ...dish.labels.map(
                   (l) => Chip(
-                    label: Text(l),
+                    label: Text(context.localizeLabel(l)),
                     backgroundColor: colorScheme.primaryContainer,
                     labelStyle:
                         TextStyle(color: colorScheme.onPrimaryContainer),
@@ -63,11 +63,11 @@ class DishDetailScreen extends StatelessWidget {
             ],
 
             // ── Ingredients ──────────────────────────────────────────────────
-            const _DetailSection(title: 'Ingredients'),
+            _DetailSection(title: l10n.ingredientsSection),
             const SizedBox(height: 8),
             if (!hasIngredients)
               Text(
-                'No ingredients listed.',
+                l10n.noIngredients,
                 style: TextStyle(color: colorScheme.onSurfaceVariant),
               )
             else
@@ -79,7 +79,7 @@ class DishDetailScreen extends StatelessWidget {
                     title: Text(ing.name),
                     trailing: Text(
                       '${_fmtNum(ing.amountPerServing)} ${ing.unit}  ·  '
-                      '${ing.caloriesPerServing.round()} kcal',
+                      '${ing.caloriesPerServing.round()} ${l10n.kcal}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
@@ -89,7 +89,7 @@ class DishDetailScreen extends StatelessWidget {
             // ── Instructions ─────────────────────────────────────────────────
             if (hasInstructions) ...[
               const SizedBox(height: 24),
-              const _DetailSection(title: 'Instructions'),
+              _DetailSection(title: l10n.instructionsSection),
               const SizedBox(height: 8),
               ...dish.instructions.asMap().entries.map(
                     (e) => Padding(
@@ -99,12 +99,11 @@ class DishDetailScreen extends StatelessWidget {
                         children: [
                           Text(
                             '${e.key + 1}.',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(e.value),
-                          ),
+                          Expanded(child: Text(e.value)),
                         ],
                       ),
                     ),
@@ -130,6 +129,7 @@ class _NutritionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       color: colorScheme.secondaryContainer,
@@ -139,7 +139,7 @@ class _NutritionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Nutrition per serving',
+              l10n.nutritionPerServing,
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 12),
@@ -147,16 +147,16 @@ class _NutritionCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _StatCell(
-                    label: 'Calories',
-                    value: '${dish.totalCalories.toStringAsFixed(1)} kcal'),
+                    label: l10n.caloriesLabel,
+                    value: '${dish.totalCalories.toStringAsFixed(1)} ${l10n.kcal}'),
                 _StatCell(
-                    label: 'Protein',
+                    label: l10n.proteinLabel,
                     value: '${dish.totalProtein.toStringAsFixed(1)} g'),
                 _StatCell(
-                    label: 'Fat',
+                    label: l10n.fatLabel,
                     value: '${dish.totalFat.toStringAsFixed(1)} g'),
                 _StatCell(
-                    label: 'Carbs',
+                    label: l10n.carbsLabel,
                     value: '${dish.totalCarbs.toStringAsFixed(1)} g'),
               ],
             ),

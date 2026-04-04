@@ -1,0 +1,205 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Meal Planner",
+
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "copy": "Copy",
+  "retry": "Retry",
+  "signOut": "Sign out",
+  "operationFailed": "Operation failed. Please try again.",
+  "importFailed": "Import failed. Please try again.",
+  "noInternet": "No internet connection.",
+  "genericError": "Something went wrong. Please try again.",
+  "permissionDenied": "Database permission denied. Check Firestore security rules.",
+  "signInNotEnabled": "Email/password sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.",
+
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "emailEmptyError": "Enter your email",
+  "emailInvalidError": "Enter a valid email",
+  "passwordEmptyError": "Enter your password",
+  "passwordTooShortError": "Password must be at least 6 characters",
+  "signIn": "Sign In",
+  "loginSubtitle": "Sign in to continue",
+  "noAccount": "Don't have an account?",
+  "register": "Register",
+  "invalidCredentials": "Invalid email or password.",
+  "tooManyAttempts": "Too many attempts. Please try again later.",
+
+  "createAccount": "Create Account",
+  "registerSubtitle": "Start planning your meals today",
+  "confirmPasswordLabel": "Confirm Password",
+  "confirmPasswordEmptyError": "Confirm your password",
+  "passwordMismatchError": "Passwords do not match",
+  "hasAccount": "Already have an account?",
+  "emailInUse": "An account with this email already exists.",
+  "invalidEmail": "Invalid email address.",
+  "weakPassword": "Password is too weak.",
+
+  "navPlan": "Plan",
+  "navDishes": "Dishes",
+  "navShopping": "Shopping",
+  "navSettings": "Settings",
+  "titleMealPlan": "Meal Plan",
+  "titleDishes": "Dishes",
+  "titleShopping": "Shopping",
+  "titleSettings": "Settings",
+
+  "addDishTooltip": "Add dish",
+  "importCsvTooltip": "Import from CSV",
+  "noDishesTitle": "No dishes yet",
+  "noDishesDescription": "Build your personal recipe library.\nTap the button below to add your first dish.",
+  "addDishButton": "Add Dish",
+  "importStarterButton": "Import starter dishes",
+  "importFromCsvButton": "Import from CSV",
+  "importingIndicator": "Importing…",
+  "loadDishesError": "Could not load dishes.",
+  "all": "All",
+  "noFilteredDishes": "No \"{label}\" dishes.",
+  "@noFilteredDishes": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "importCsvDialogTitle": "Import from CSV?",
+  "importCsvDialogContent": "{count, plural, =1{Found 1 dish. It will be added to your library.} other{Found {count} dishes. They will be added to your library.}}",
+  "@importCsvDialogContent": {
+    "placeholders": {
+      "count": { "type": "num", "format": "decimalPattern" }
+    }
+  },
+  "csvImportSuccess": "{count, plural, =1{1 dish imported successfully.} other{{count} dishes imported successfully.}}",
+  "@csvImportSuccess": {
+    "placeholders": {
+      "count": { "type": "num", "format": "decimalPattern" }
+    }
+  },
+  "importStarterDialogTitle": "Import starter dishes?",
+  "importStarterDialogContent": "7 breakfast dishes will be added to your library. Existing dishes with the same ID will be overwritten.",
+  "starterImportSuccess": "7 dishes imported successfully.",
+  "noDishesInFile": "No dishes found in the selected file.",
+  "deleteDishTitle": "Delete dish?",
+  "deleteDishContent": "Delete \"{name}\"? This cannot be undone.",
+  "@deleteDishContent": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "editTooltip": "Edit",
+  "noIngredients": "No ingredients listed.",
+  "ingredientsSection": "Ingredients",
+  "instructionsSection": "Instructions",
+  "nutritionPerServing": "Nutrition per serving",
+  "caloriesLabel": "Calories",
+  "proteinLabel": "Protein",
+  "fatLabel": "Fat",
+  "carbsLabel": "Carbs",
+
+  "editDishTitle": "Edit Dish",
+  "addDishTitle": "Add Dish",
+  "dishNameLabel": "Dish name",
+  "dishNameError": "Enter a dish name",
+  "servingsLabel": "Number of servings",
+  "servingsHelper": "Base unit — 1 serving = 1 person",
+  "servingsError": "Enter a number ≥ 1",
+  "labelsOptional": "Labels (optional)",
+  "addIngredientLabel": "Add ingredient",
+  "noIngredientsYet": "No ingredients yet.",
+  "instructionsOptional": "Instructions (optional)",
+  "addStep": "Add step",
+  "noStepsAdded": "No steps added.",
+  "stepPlaceholder": "Describe the step…",
+  "removeStep": "Remove step",
+  "saveDishButton": "Save Dish",
+  "saveDishFailed": "Failed to save dish. Please try again.",
+  "addIngredientTitle": "Add Ingredient",
+  "editIngredientTitle": "Edit Ingredient",
+  "searchDatabase": "Search database",
+  "changeProduct": "Change: {name}",
+  "@changeProduct": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "ingredientNameLabel": "Ingredient name",
+  "requiredError": "Required",
+  "amountLabel": "Amount",
+  "unitLabel": "Unit",
+  "autoCalculatedNote": "Nutrition auto-calculated per entered amount",
+  "caloriesKcalLabel": "Calories (kcal)",
+  "proteinGLabel": "Protein (g)",
+  "fatGLabel": "Fat (g)",
+  "carbsGLabel": "Carbs (g)",
+  "numberError": "Enter a number ≥ 0",
+  "searchDatabaseTitle": "Search database",
+  "searchProductsHint": "Search products…",
+  "noProductsFound": "No products found.",
+
+  "weekTab": "Week",
+  "monTab": "Mon",
+  "tueTab": "Tue",
+  "wedTab": "Wed",
+  "thuTab": "Thu",
+  "friTab": "Fri",
+  "satTab": "Sat",
+  "sunTab": "Sun",
+  "loadMealPlanError": "Could not load meal plan.",
+  "previousWeek": "Previous week",
+  "nextWeek": "Next week",
+  "today": "Today",
+  "moreOptions": "More options",
+  "copyFromPreviousWeek": "Copy from previous week",
+  "copyWeekDialogTitle": "Copy previous week?",
+  "copyWeekDialogContent": "Replace {thisRange} with dishes from {prevRange}?",
+  "@copyWeekDialogContent": {
+    "placeholders": {
+      "thisRange": { "type": "String" },
+      "prevRange": { "type": "String" }
+    }
+  },
+  "weekCopied": "Week copied!",
+  "noPreviousWeekDishes": "Previous week has no dishes.",
+  "weeklyTotal": "Weekly Total",
+  "kcal": "kcal",
+  "emptySlot": "Tap + to add a dish",
+  "remove": "Remove",
+  "copyDayDialogTitle": "Copy from previous week?",
+  "copyDayDialogContent": "Replace {dayName} {date}'s dishes with last {dayName}'s dishes?",
+  "@copyDayDialogContent": {
+    "placeholders": {
+      "dayName": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "dayCopied": "Day copied!",
+  "noPreviousDayDishes": "Previous week has no dishes for this day.",
+  "noDishesInLibrary": "No dishes in library yet.",
+  "noMatches": "No matches.",
+  "addDishDialogTitle": "Add dish",
+  "searchDishesHint": "Search dishes…",
+
+  "mealSlotsTitle": "Meal Slots",
+  "rename": "Rename",
+  "addSlot": "Add Slot",
+  "renameSlotTitle": "Rename Slot",
+  "addSlotTitle": "Add Slot",
+  "slotNameLabel": "Slot name",
+  "slotNameEmptyError": "Name cannot be empty",
+  "slotNameExistsError": "A slot with this name already exists",
+  "saveFailedSnackbar": "Failed to save. Please try again.",
+  "languageTitle": "Language",
+  "languageEnglish": "English",
+  "languageUkrainian": "Ukrainian",
+
+  "shoppingListTitle": "Shopping List",
+  "comingSoon": "Shopping List — coming soon",
+
+  "labelBreakfast": "Breakfast",
+  "labelLunch": "Lunch",
+  "labelDinner": "Dinner"
+}

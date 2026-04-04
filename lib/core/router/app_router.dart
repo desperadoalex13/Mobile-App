@@ -14,6 +14,7 @@ import '../../features/dish_library/presentation/dish_library_screen.dart';
 import '../../features/meal_plan/presentation/meal_plan_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shopping_list/presentation/shopping_list_screen.dart';
+import '../../l10n/l10n.dart';
 
 part 'app_routes.dart';
 
@@ -114,14 +115,15 @@ class ScaffoldWithNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final location = GoRouterState.of(context).matchedLocation;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titleForLocation(location)),
+        title: Text(_titleForLocation(location, l10n)),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
+            tooltip: l10n.signOut,
             onPressed: () =>
                 ref.read(authControllerProvider.notifier).signOut(),
           ),
@@ -142,14 +144,16 @@ class ScaffoldWithNavBar extends ConsumerWidget {
               context.go(AppRoutes.settings);
           }
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-              icon: Icon(Icons.calendar_today), label: 'Plan'),
-          NavigationDestination(icon: Icon(Icons.menu_book), label: 'Dishes'),
+              icon: const Icon(Icons.calendar_today), label: l10n.navPlan),
           NavigationDestination(
-              icon: Icon(Icons.shopping_cart), label: 'Shopping'),
+              icon: const Icon(Icons.menu_book), label: l10n.navDishes),
           NavigationDestination(
-              icon: Icon(Icons.settings_outlined), label: 'Settings'),
+              icon: const Icon(Icons.shopping_cart), label: l10n.navShopping),
+          NavigationDestination(
+              icon: const Icon(Icons.settings_outlined),
+              label: l10n.navSettings),
         ],
       ),
     );
@@ -163,10 +167,10 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     return 0;
   }
 
-  String _titleForLocation(String location) {
-    if (location.startsWith(AppRoutes.dishLibrary)) return 'Dishes';
-    if (location.startsWith(AppRoutes.shoppingList)) return 'Shopping';
-    if (location.startsWith(AppRoutes.settings)) return 'Settings';
-    return 'Meal Plan';
+  String _titleForLocation(String location, AppLocalizations l10n) {
+    if (location.startsWith(AppRoutes.dishLibrary)) return l10n.titleDishes;
+    if (location.startsWith(AppRoutes.shoppingList)) return l10n.titleShopping;
+    if (location.startsWith(AppRoutes.settings)) return l10n.titleSettings;
+    return l10n.titleMealPlan;
   }
 }

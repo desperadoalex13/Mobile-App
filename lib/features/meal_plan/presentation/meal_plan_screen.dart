@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -35,11 +36,13 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     ref.listen(mealPlanMutationProvider, (_, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Operation failed. Please try again.'),
+            content: Text(l10n.operationFailed),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -55,22 +58,22 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen>
         TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: const [
-            Tab(text: 'Week'),
-            Tab(text: 'Mon'),
-            Tab(text: 'Tue'),
-            Tab(text: 'Wed'),
-            Tab(text: 'Thu'),
-            Tab(text: 'Fri'),
-            Tab(text: 'Sat'),
-            Tab(text: 'Sun'),
+          tabs: [
+            Tab(text: l10n.weekTab),
+            Tab(text: l10n.monTab),
+            Tab(text: l10n.tueTab),
+            Tab(text: l10n.wedTab),
+            Tab(text: l10n.thuTab),
+            Tab(text: l10n.friTab),
+            Tab(text: l10n.satTab),
+            Tab(text: l10n.sunTab),
           ],
         ),
         Expanded(
           child: planAsync.when(
             loading: () => const LoadingIndicator(),
             error: (e, _) => ErrorView(
-              message: 'Could not load meal plan.',
+              message: l10n.loadMealPlanError,
               onRetry: () => ref.invalidate(mealPlanProvider),
             ),
             data: (plan) => TabBarView(
@@ -108,6 +111,7 @@ class _WeekHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final endOfWeek = week.add(const Duration(days: 6));
     final rangeLabel =
         '${week.toDisplayDate()} – ${endOfWeek.toDisplayDate()}';
@@ -119,7 +123,7 @@ class _WeekHeader extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            tooltip: 'Previous week',
+            tooltip: l10n.previousWeek,
             onPressed: () => ref.read(selectedWeekProvider.notifier).state =
                 week.subtract(const Duration(days: 7)),
           ),
@@ -134,28 +138,28 @@ class _WeekHeader extends StatelessWidget {
             TextButton(
               onPressed: () => ref.read(selectedWeekProvider.notifier).state =
                   DateTime.now().startOfWeek,
-              child: const Text('Today'),
+              child: Text(l10n.today),
             ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
-            tooltip: 'Next week',
+            tooltip: l10n.nextWeek,
             onPressed: () => ref.read(selectedWeekProvider.notifier).state =
                 week.add(const Duration(days: 7)),
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
-            tooltip: 'More options',
+            tooltip: l10n.moreOptions,
             onSelected: (value) async {
               if (value == 'copy_week') {
                 await _confirmCopyWeek(context, ref, week);
               }
             },
-            itemBuilder: (_) => const [
+            itemBuilder: (_) => [
               PopupMenuItem(
                 value: 'copy_week',
                 child: ListTile(
-                  leading: Icon(Icons.content_copy),
-                  title: Text('Copy from previous week'),
+                  leading: const Icon(Icons.content_copy),
+                  title: Text(l10n.copyFromPreviousWeek),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -168,25 +172,27 @@ class _WeekHeader extends StatelessWidget {
 
   Future<void> _confirmCopyWeek(
       BuildContext context, WidgetRef ref, DateTime week) async {
+    final l10n = context.l10n;
     final prevWeek = week.subtract(const Duration(days: 7));
     final prevEnd = prevWeek.add(const Duration(days: 6));
     final thisEnd = week.add(const Duration(days: 6));
+    final thisRange =
+        '${week.toDisplayDate()} – ${thisEnd.toDisplayDate()}';
+    final prevRange =
+        '${prevWeek.toDisplayDate()} – ${prevEnd.toDisplayDate()}';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Copy previous week?'),
-        content: Text(
-          'Replace dishes in ${week.toDisplayDate()} – ${thisEnd.toDisplayDate()} '
-          'with dishes from ${prevWeek.toDisplayDate()} – ${prevEnd.toDisplayDate()}?',
-        ),
+        title: Text(l10n.copyWeekDialogTitle),
+        content: Text(l10n.copyWeekDialogContent(thisRange, prevRange)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Copy'),
+            child: Text(l10n.copy),
           ),
         ],
       ),
@@ -198,8 +204,9 @@ class _WeekHeader extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                hadContent ? 'Week copied!' : 'Previous week has no dishes.'),
+            content: Text(hadContent
+                ? l10n.weekCopied
+                : l10n.noPreviousWeekDishes),
           ),
         );
       }
@@ -277,10 +284,10 @@ class _DayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final isToday = date.isSameDay(DateTime.now());
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final label = '${weekdays[date.weekday - 1]} ${date.toDisplayDate()}';
+    final label = '${context.dayAbbr(date.weekday)} ${date.toDisplayDate()}';
     final nutrition = _calcDayNutrition(dayPlan, dishMap);
 
     return Card(
@@ -312,7 +319,7 @@ class _DayCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Today',
+                        l10n.today,
                         style:
                             Theme.of(context).textTheme.labelSmall?.copyWith(
                                   color: colorScheme.onPrimaryContainer,
@@ -323,7 +330,7 @@ class _DayCard extends StatelessWidget {
                   const Spacer(),
                   if (nutrition.kcal > 0)
                     Text(
-                      '${nutrition.kcal.round()} kcal',
+                      '${nutrition.kcal.round()} ${l10n.kcal}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.w500,
@@ -457,6 +464,7 @@ class _SlotSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -472,7 +480,7 @@ class _SlotSection extends ConsumerWidget {
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline),
-                  tooltip: 'Add dish',
+                  tooltip: l10n.addDishTooltip,
                   onPressed: () => _pickDish(context, ref),
                 ),
               ],
@@ -481,7 +489,7 @@ class _SlotSection extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  'Tap + to add a dish',
+                  l10n.emptySlot,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.outlineVariant,
                       ),
@@ -495,7 +503,7 @@ class _SlotSection extends ConsumerWidget {
                   title: Text(dishMap[id]?.name ?? id),
                   trailing: IconButton(
                     icon: const Icon(Icons.close, size: 18),
-                    tooltip: 'Remove',
+                    tooltip: l10n.remove,
                     onPressed: () => ref
                         .read(mealPlanMutationProvider.notifier)
                         .removeDish(date, slot.name, id),
@@ -536,31 +544,30 @@ class _CopyDayButton extends ConsumerWidget {
       alignment: Alignment.centerRight,
       child: TextButton.icon(
         icon: const Icon(Icons.content_copy, size: 16),
-        label: const Text('Copy from previous week'),
+        label: Text(context.l10n.copyFromPreviousWeek),
         onPressed: () => _confirmCopyDay(context, ref),
       ),
     );
   }
 
   Future<void> _confirmCopyDay(BuildContext context, WidgetRef ref) async {
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final dayName = weekdays[date.weekday - 1];
+    final l10n = context.l10n;
+    final dayName = context.dayAbbr(date.weekday);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Copy from previous week?'),
+        title: Text(l10n.copyDayDialogTitle),
         content: Text(
-          "Replace $dayName ${date.toDisplayDate()}'s dishes "
-          'with last $dayName\'s dishes?',
+          l10n.copyDayDialogContent(dayName, date.toDisplayDate()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Copy'),
+            child: Text(l10n.copy),
           ),
         ],
       ),
@@ -573,8 +580,8 @@ class _CopyDayButton extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(hadContent
-                ? 'Day copied!'
-                : 'Previous week has no dishes for this day.'),
+                ? l10n.dayCopied
+                : l10n.noPreviousDayDishes),
           ),
         );
       }
@@ -611,6 +618,7 @@ class _WeekNutritionSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     double kcal = 0, protein = 0, fat = 0, carbs = 0;
     for (final day in dayPlans) {
       final n = _calcDayNutrition(day, dishMap);
@@ -633,7 +641,7 @@ class _WeekNutritionSummary extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              'Weekly Total',
+              l10n.weeklyTotal,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: colorScheme.onSecondaryContainer,
                     fontWeight: FontWeight.w600,
@@ -643,19 +651,19 @@ class _WeekNutritionSummary extends StatelessWidget {
             Row(
               children: [
                 _NutrientChip(
-                    label: 'kcal',
+                    label: l10n.kcal,
                     value: kcal.round().toString(),
                     onContainer: colorScheme.onSecondaryContainer),
                 _NutrientChip(
-                    label: 'Protein',
+                    label: l10n.proteinLabel,
                     value: '${fmt(protein)}g',
                     onContainer: colorScheme.onSecondaryContainer),
                 _NutrientChip(
-                    label: 'Fat',
+                    label: l10n.fatLabel,
                     value: '${fmt(fat)}g',
                     onContainer: colorScheme.onSecondaryContainer),
                 _NutrientChip(
-                    label: 'Carbs',
+                    label: l10n.carbsLabel,
                     value: '${fmt(carbs)}g',
                     onContainer: colorScheme.onSecondaryContainer),
               ],
@@ -675,6 +683,7 @@ class _DayNutritionSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final n = _calcDayNutrition(dayPlan, dishMap);
     if (n.kcal == 0) return const SizedBox.shrink();
 
@@ -688,10 +697,11 @@ class _DayNutritionSummary extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         child: Row(
           children: [
-            _NutrientChip(label: 'kcal', value: n.kcal.round().toString()),
-            _NutrientChip(label: 'Protein', value: '${fmt(n.protein)}g'),
-            _NutrientChip(label: 'Fat', value: '${fmt(n.fat)}g'),
-            _NutrientChip(label: 'Carbs', value: '${fmt(n.carbs)}g'),
+            _NutrientChip(label: l10n.kcal, value: n.kcal.round().toString()),
+            _NutrientChip(
+                label: l10n.proteinLabel, value: '${fmt(n.protein)}g'),
+            _NutrientChip(label: l10n.fatLabel, value: '${fmt(n.fat)}g'),
+            _NutrientChip(label: l10n.carbsLabel, value: '${fmt(n.carbs)}g'),
           ],
         ),
       ),
@@ -750,6 +760,7 @@ class _DishPickerDialogState extends ConsumerState<_DishPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final allDishes = ref.watch(dishesProvider).valueOrNull ?? [];
     final filtered = _query.isEmpty
         ? allDishes
@@ -759,7 +770,7 @@ class _DishPickerDialogState extends ConsumerState<_DishPickerDialog> {
             .toList();
 
     return AlertDialog(
-      title: const Text('Add dish'),
+      title: Text(l10n.addDishDialogTitle),
       content: SizedBox(
         width: 320,
         child: Column(
@@ -767,9 +778,9 @@ class _DishPickerDialogState extends ConsumerState<_DishPickerDialog> {
           children: [
             TextField(
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'Search dishes…',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                hintText: l10n.searchDishesHint,
+                prefixIcon: const Icon(Icons.search),
               ),
               onChanged: (v) => setState(() => _query = v),
             ),
@@ -777,14 +788,14 @@ class _DishPickerDialogState extends ConsumerState<_DishPickerDialog> {
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 300),
               child: allDishes.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text('No dishes in library yet.'),
+                  ? Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(l10n.noDishesInLibrary),
                     )
                   : filtered.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Text('No matches.'),
+                      ? Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(l10n.noMatches),
                         )
                       : ListView.builder(
                           shrinkWrap: true,
@@ -793,8 +804,8 @@ class _DishPickerDialogState extends ConsumerState<_DishPickerDialog> {
                             final dish = filtered[i];
                             return ListTile(
                               title: Text(dish.name),
-                              subtitle:
-                                  Text('${dish.totalCalories.round()} kcal'),
+                              subtitle: Text(
+                                  '${dish.totalCalories.round()} ${l10n.kcal}'),
                               onTap: () =>
                                   Navigator.of(context).pop(dish.id),
                             );
@@ -807,7 +818,7 @@ class _DishPickerDialogState extends ConsumerState<_DishPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
       ],
     );

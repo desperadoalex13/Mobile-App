@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' hide rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../data/dish_repository.dart';
 import '../domain/dish_model.dart';
 import '../domain/product_model.dart';
@@ -136,6 +137,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final mutationState = ref.watch(dishMutationProvider);
     final isSaving = mutationState is AsyncLoading;
 
@@ -143,7 +145,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to save dish. Please try again.'),
+            content: Text(l10n.saveDishFailed),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -152,7 +154,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Dish' : 'Add Dish'),
+        title: Text(_isEditing ? l10n.editDishTitle : l10n.addDishTitle),
       ),
       body: Form(
         key: _formKey,
@@ -163,12 +165,12 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
             TextFormField(
               controller: _nameController,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Dish name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.dishNameLabel,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Enter a dish name' : null,
+                  (v == null || v.trim().isEmpty) ? l10n.dishNameError : null,
             ),
             const SizedBox(height: 16),
 
@@ -177,14 +179,14 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
               controller: _servingsController,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Number of servings',
-                helperText: 'Base unit — 1 serving = 1 person',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.servingsLabel,
+                helperText: l10n.servingsHelper,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) {
                 final n = int.tryParse(v ?? '');
-                if (n == null || n < 1) return 'Enter a number ≥ 1';
+                if (n == null || n < 1) return l10n.servingsError;
                 return null;
               },
             ),
@@ -192,7 +194,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
 
             // ── Labels ────────────────────────────────────────────────────
             Text(
-              'Labels (optional)',
+              l10n.labelsOptional,
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
@@ -200,7 +202,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
               spacing: 8,
               children: Dish.availableLabels.map((label) {
                 return FilterChip(
-                  label: Text(label),
+                  label: Text(context.localizeLabel(label)),
                   selected: _labels.contains(label),
                   onSelected: (selected) => setState(() {
                     selected ? _labels.add(label) : _labels.remove(label);
@@ -212,16 +214,17 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
 
             // ── Ingredients ───────────────────────────────────────────────
             _SectionHeader(
-              title: 'Ingredients',
+              title: l10n.ingredientsSection,
               onAdd: _addIngredient,
-              addLabel: 'Add ingredient',
+              addLabel: l10n.addIngredientLabel,
             ),
             if (_ingredients.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  'No ingredients yet.',
-                  style: TextStyle(color: Colors.grey),
+                  l10n.noIngredientsYet,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               )
             else
@@ -237,16 +240,17 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
 
             // ── Instructions ──────────────────────────────────────────────
             _SectionHeader(
-              title: 'Instructions (optional)',
+              title: l10n.instructionsOptional,
               onAdd: _addInstruction,
-              addLabel: 'Add step',
+              addLabel: l10n.addStep,
             ),
             if (_instructionControllers.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  'No steps added.',
-                  style: TextStyle(color: Colors.grey),
+                  l10n.noStepsAdded,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               )
             else
@@ -260,8 +264,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
                         padding: const EdgeInsets.only(top: 14, right: 8),
                         child: Text(
                           '${i + 1}.',
-                          style:
-                              const TextStyle(fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                       Expanded(
@@ -269,15 +272,15 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
                           controller: _instructionControllers[i],
                           textCapitalization: TextCapitalization.sentences,
                           maxLines: null,
-                          decoration: const InputDecoration(
-                            hintText: 'Describe the step…',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            hintText: l10n.stepPlaceholder,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close),
-                        tooltip: 'Remove step',
+                        tooltip: l10n.removeStep,
                         onPressed: () => _removeInstruction(i),
                       ),
                     ],
@@ -306,7 +309,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save Dish'),
+                  : Text(l10n.saveDishButton),
             ),
             const SizedBox(height: 32),
           ],
@@ -369,25 +372,26 @@ class _IngredientRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         title: Text(ingredient.name),
         subtitle: Text(
           '${_fmtNum(ingredient.amountPerServing)} ${ingredient.unit}  ·  '
-          '${ingredient.caloriesPerServing.round()} kcal',
+          '${ingredient.caloriesPerServing.round()} ${l10n.kcal}',
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Edit',
+              tooltip: l10n.edit,
               onPressed: onEdit,
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Remove',
+              tooltip: l10n.remove,
               onPressed: onDelete,
             ),
           ],
@@ -416,6 +420,7 @@ class _NutritionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       color: colorScheme.secondaryContainer,
@@ -425,17 +430,18 @@ class _NutritionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Nutrition per serving',
+              l10n.nutritionPerServing,
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _NutrientCell(label: 'Calories', value: calories, unit: 'kcal'),
-                _NutrientCell(label: 'Protein', value: protein, unit: 'g'),
-                _NutrientCell(label: 'Fat', value: fat, unit: 'g'),
-                _NutrientCell(label: 'Carbs', value: carbs, unit: 'g'),
+                _NutrientCell(
+                    label: l10n.caloriesLabel, value: calories, unit: l10n.kcal),
+                _NutrientCell(label: l10n.proteinLabel, value: protein, unit: 'g'),
+                _NutrientCell(label: l10n.fatLabel, value: fat, unit: 'g'),
+                _NutrientCell(label: l10n.carbsLabel, value: carbs, unit: 'g'),
               ],
             ),
           ],
@@ -557,9 +563,10 @@ class _IngredientDialogState extends ConsumerState<_IngredientDialog> {
   }
 
   String? _validateNumber(String? v, {bool required = true}) {
-    if (v == null || v.isEmpty) return required ? 'Required' : null;
+    final l10n = context.l10n;
+    if (v == null || v.isEmpty) return required ? l10n.requiredError : null;
     final n = double.tryParse(v);
-    if (n == null || n < 0) return 'Enter a number ≥ 0';
+    if (n == null || n < 0) return l10n.numberError;
     return null;
   }
 
@@ -583,105 +590,110 @@ class _IngredientDialogState extends ConsumerState<_IngredientDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
-      title: Text(widget.initial != null ? 'Edit Ingredient' : 'Add Ingredient'),
+      title: Text(widget.initial != null
+          ? l10n.editIngredientTitle
+          : l10n.addIngredientTitle),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            OutlinedButton.icon(
-              icon: const Icon(Icons.search, size: 18),
-              label: Text(
-                _linkedProduct == null
-                    ? 'Search database'
-                    : 'Change: ${_linkedProduct!.name}',
-                overflow: TextOverflow.ellipsis,
+              OutlinedButton.icon(
+                icon: const Icon(Icons.search, size: 18),
+                label: Text(
+                  _linkedProduct == null
+                      ? l10n.searchDatabase
+                      : l10n.changeProduct(_linkedProduct!.name),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onPressed: _pickFromDatabase,
               ),
-              onPressed: _pickFromDatabase,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _nameCtrl,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(labelText: 'Ingredient name'),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _amountCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Amount'),
-                    validator: _validateNumber,
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _nameCtrl,
+                textCapitalization: TextCapitalization.sentences,
+                decoration:
+                    InputDecoration(labelText: l10n.ingredientNameLabel),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? l10n.requiredError : null,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _amountCtrl,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration:
+                          InputDecoration(labelText: l10n.amountLabel),
+                      validator: _validateNumber,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 100,
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _unit,
+                      decoration: InputDecoration(labelText: l10n.unitLabel),
+                      items: _units
+                          .map((u) =>
+                              DropdownMenuItem(value: u, child: Text(u)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _unit = v!),
+                    ),
+                  ),
+                ],
+              ),
+              if (_linkedProduct != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    l10n.autoCalculatedNote,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 100,
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _unit,
-                    decoration: const InputDecoration(labelText: 'Unit'),
-                    items: _units
-                        .map((u) =>
-                            DropdownMenuItem(value: u, child: Text(u)))
-                        .toList(),
-                    onChanged: (v) => setState(() => _unit = v!),
-                  ),
-                ),
-              ],
-            ),
-            if (_linkedProduct != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  'Nutrition auto-calculated per entered amount',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                ),
+              const SizedBox(height: 12),
+              _NumberField(
+                controller: _calCtrl,
+                label: l10n.caloriesKcalLabel,
+                validate: _validateNumber,
               ),
-            const SizedBox(height: 12),
-            _NumberField(
-              controller: _calCtrl,
-              label: 'Calories (kcal)',
-              validate: _validateNumber,
-            ),
-            const SizedBox(height: 8),
-            _NumberField(
-              controller: _protCtrl,
-              label: 'Protein (g)',
-              validate: _validateNumber,
-            ),
-            const SizedBox(height: 8),
-            _NumberField(
-              controller: _fatCtrl,
-              label: 'Fat (g)',
-              validate: _validateNumber,
-            ),
-            const SizedBox(height: 8),
-            _NumberField(
-              controller: _carbsCtrl,
-              label: 'Carbs (g)',
-              validate: _validateNumber,
-            ),
-          ],
+              const SizedBox(height: 8),
+              _NumberField(
+                controller: _protCtrl,
+                label: l10n.proteinGLabel,
+                validate: _validateNumber,
+              ),
+              const SizedBox(height: 8),
+              _NumberField(
+                controller: _fatCtrl,
+                label: l10n.fatGLabel,
+                validate: _validateNumber,
+              ),
+              const SizedBox(height: 8),
+              _NumberField(
+                controller: _carbsCtrl,
+                label: l10n.carbsGLabel,
+                validate: _validateNumber,
+              ),
+            ],
+          ),
         ),
-      ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: _confirm,
-          child: Text(widget.initial != null ? 'Save' : 'Add'),
+          child: Text(widget.initial != null ? l10n.save : l10n.addIngredientLabel),
         ),
       ],
     );
@@ -740,6 +752,7 @@ class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final productsAsync = ref.watch(productsProvider);
     return Dialog(
       child: SizedBox(
@@ -753,7 +766,7 @@ class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Search database',
+                      l10n.searchDatabaseTitle,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
@@ -769,10 +782,10 @@ class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
               child: TextField(
                 controller: _searchCtrl,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search products…',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: l10n.searchProductsHint,
+                  prefixIcon: const Icon(Icons.search),
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
               ),
@@ -792,9 +805,7 @@ class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
                               .contains(_query.toLowerCase().trim()))
                           .toList();
                   if (filtered.isEmpty) {
-                    return const Center(
-                      child: Text('No products found.'),
-                    );
+                    return Center(child: Text(l10n.noProductsFound));
                   }
                   return ListView.builder(
                     itemCount: filtered.length,
@@ -804,7 +815,7 @@ class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
                         dense: true,
                         title: Text(p.name),
                         subtitle: Text(
-                          '${p.kcalPer100.round()} kcal · '
+                          '${p.kcalPer100.round()} ${l10n.kcal} · '
                           'P ${p.proteinPer100}g · '
                           'F ${p.fatPer100}g · '
                           'C ${p.carbsPer100}g'

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/features/auth/presentation/auth_controller.dart';
 import 'package:mobile_app/features/auth/presentation/register_screen.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class _StubAuthController extends AuthController {
   @override
@@ -42,7 +43,11 @@ Widget _buildSubject({bool loading = false}) {
         loading ? _LoadingAuthController.new : _StubAuthController.new,
       ),
     ],
-    child: const MaterialApp(home: RegisterScreen()),
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const RegisterScreen(),
+    ),
   );
 }
 

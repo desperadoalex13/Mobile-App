@@ -1,0 +1,205 @@
+{
+  "@@locale": "uk",
+
+  "appTitle": "Планувальник харчування",
+
+  "cancel": "Скасувати",
+  "save": "Зберегти",
+  "delete": "Видалити",
+  "edit": "Редагувати",
+  "copy": "Копіювати",
+  "retry": "Повторити",
+  "signOut": "Вийти",
+  "operationFailed": "Операція не вдалася. Спробуйте ще раз.",
+  "importFailed": "Імпорт не вдався. Спробуйте ще раз.",
+  "noInternet": "Немає підключення до інтернету.",
+  "genericError": "Щось пішло не так. Спробуйте ще раз.",
+  "permissionDenied": "Відмовлено в доступі до бази даних. Перевірте правила безпеки Firestore.",
+  "signInNotEnabled": "Вхід через email/пароль не увімкнено. Увімкніть у Firebase Console → Authentication → Sign-in method.",
+
+  "emailLabel": "Електронна пошта",
+  "passwordLabel": "Пароль",
+  "emailEmptyError": "Введіть електронну пошту",
+  "emailInvalidError": "Введіть правильну електронну пошту",
+  "passwordEmptyError": "Введіть пароль",
+  "passwordTooShortError": "Пароль має містити не менше 6 символів",
+  "signIn": "Увійти",
+  "loginSubtitle": "Увійдіть, щоб продовжити",
+  "noAccount": "Немає облікового запису?",
+  "register": "Зареєструватися",
+  "invalidCredentials": "Невірна пошта або пароль.",
+  "tooManyAttempts": "Забагато спроб. Повторіть пізніше.",
+
+  "createAccount": "Створити обліковий запис",
+  "registerSubtitle": "Почніть планувати харчування сьогодні",
+  "confirmPasswordLabel": "Підтвердіть пароль",
+  "confirmPasswordEmptyError": "Підтвердіть пароль",
+  "passwordMismatchError": "Паролі не збігаються",
+  "hasAccount": "Вже є обліковий запис?",
+  "emailInUse": "Обліковий запис з цією поштою вже існує.",
+  "invalidEmail": "Невірна електронна пошта.",
+  "weakPassword": "Пароль занадто слабкий.",
+
+  "navPlan": "Меню",
+  "navDishes": "Страви",
+  "navShopping": "Покупки",
+  "navSettings": "Налаштування",
+  "titleMealPlan": "План харчування",
+  "titleDishes": "Страви",
+  "titleShopping": "Покупки",
+  "titleSettings": "Налаштування",
+
+  "addDishTooltip": "Додати страву",
+  "importCsvTooltip": "Імпорт з CSV",
+  "noDishesTitle": "Страв поки немає",
+  "noDishesDescription": "Створіть особисту бібліотеку рецептів.\nНатисніть кнопку нижче, щоб додати першу страву.",
+  "addDishButton": "Додати страву",
+  "importStarterButton": "Імпортувати початкові страви",
+  "importFromCsvButton": "Імпортувати з CSV",
+  "importingIndicator": "Імпортування…",
+  "loadDishesError": "Не вдалося завантажити страви.",
+  "all": "Всі",
+  "noFilteredDishes": "Немає страв «{label}».",
+  "@noFilteredDishes": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "importCsvDialogTitle": "Імпортувати з CSV?",
+  "importCsvDialogContent": "{count, plural, =1{Знайдено 1 страву. Буде додано до бібліотеки.} other{Знайдено {count} страви. Будуть додані до бібліотеки.}}",
+  "@importCsvDialogContent": {
+    "placeholders": {
+      "count": { "type": "num", "format": "decimalPattern" }
+    }
+  },
+  "csvImportSuccess": "{count, plural, =1{1 страву успішно імпортовано.} other{{count} страви успішно імпортовано.}}",
+  "@csvImportSuccess": {
+    "placeholders": {
+      "count": { "type": "num", "format": "decimalPattern" }
+    }
+  },
+  "importStarterDialogTitle": "Імпортувати початкові страви?",
+  "importStarterDialogContent": "7 сніданкових страв буде додано до вашої бібліотеки. Існуючі страви з тим самим ID будуть перезаписані.",
+  "starterImportSuccess": "7 страв успішно імпортовано.",
+  "noDishesInFile": "Страви у вибраному файлі не знайдені.",
+  "deleteDishTitle": "Видалити страву?",
+  "deleteDishContent": "Видалити «{name}»? Це неможливо скасувати.",
+  "@deleteDishContent": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "editTooltip": "Редагувати",
+  "noIngredients": "Інгредієнти не вказані.",
+  "ingredientsSection": "Інгредієнти",
+  "instructionsSection": "Приготування",
+  "nutritionPerServing": "Харчова цінність на порцію",
+  "caloriesLabel": "Калорії",
+  "proteinLabel": "Білки",
+  "fatLabel": "Жири",
+  "carbsLabel": "Вуглеводи",
+
+  "editDishTitle": "Редагувати страву",
+  "addDishTitle": "Додати страву",
+  "dishNameLabel": "Назва страви",
+  "dishNameError": "Введіть назву страви",
+  "servingsLabel": "Кількість порцій",
+  "servingsHelper": "Базова одиниця — 1 порція = 1 людина",
+  "servingsError": "Введіть число ≥ 1",
+  "labelsOptional": "Мітки (необов'язково)",
+  "addIngredientLabel": "Додати інгредієнт",
+  "noIngredientsYet": "Інгредієнтів поки немає.",
+  "instructionsOptional": "Приготування (необов'язково)",
+  "addStep": "Додати крок",
+  "noStepsAdded": "Кроки ще не додані.",
+  "stepPlaceholder": "Опишіть крок…",
+  "removeStep": "Видалити крок",
+  "saveDishButton": "Зберегти страву",
+  "saveDishFailed": "Не вдалося зберегти страву. Спробуйте ще раз.",
+  "addIngredientTitle": "Додати інгредієнт",
+  "editIngredientTitle": "Редагувати інгредієнт",
+  "searchDatabase": "Пошук у базі",
+  "changeProduct": "Змінити: {name}",
+  "@changeProduct": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "ingredientNameLabel": "Назва інгредієнта",
+  "requiredError": "Обов'язково",
+  "amountLabel": "Кількість",
+  "unitLabel": "Одиниця",
+  "autoCalculatedNote": "Харчова цінність розраховується автоматично за введеною кількістю",
+  "caloriesKcalLabel": "Калорії (ккал)",
+  "proteinGLabel": "Білки (г)",
+  "fatGLabel": "Жири (г)",
+  "carbsGLabel": "Вуглеводи (г)",
+  "numberError": "Введіть число ≥ 0",
+  "searchDatabaseTitle": "Пошук у базі",
+  "searchProductsHint": "Пошук продуктів…",
+  "noProductsFound": "Продуктів не знайдено.",
+
+  "weekTab": "Тиждень",
+  "monTab": "Пн",
+  "tueTab": "Вт",
+  "wedTab": "Ср",
+  "thuTab": "Чт",
+  "friTab": "Пт",
+  "satTab": "Сб",
+  "sunTab": "Нд",
+  "loadMealPlanError": "Не вдалося завантажити план харчування.",
+  "previousWeek": "Попередній тиждень",
+  "nextWeek": "Наступний тиждень",
+  "today": "Сьогодні",
+  "moreOptions": "Більше параметрів",
+  "copyFromPreviousWeek": "Копіювати з попереднього тижня",
+  "copyWeekDialogTitle": "Копіювати попередній тиждень?",
+  "copyWeekDialogContent": "Замінити {thisRange} стравами з {prevRange}?",
+  "@copyWeekDialogContent": {
+    "placeholders": {
+      "thisRange": { "type": "String" },
+      "prevRange": { "type": "String" }
+    }
+  },
+  "weekCopied": "Тиждень скопійовано!",
+  "noPreviousWeekDishes": "У попередньому тижні немає страв.",
+  "weeklyTotal": "Тижнева сума",
+  "kcal": "ккал",
+  "emptySlot": "Натисніть + щоб додати страву",
+  "remove": "Видалити",
+  "copyDayDialogTitle": "Копіювати з попереднього тижня?",
+  "copyDayDialogContent": "Замінити страви {dayName} {date} стравами минулого {dayName}?",
+  "@copyDayDialogContent": {
+    "placeholders": {
+      "dayName": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "dayCopied": "День скопійовано!",
+  "noPreviousDayDishes": "У попередньому тижні немає страв для цього дня.",
+  "noDishesInLibrary": "Бібліотека страв порожня.",
+  "noMatches": "Нічого не знайдено.",
+  "addDishDialogTitle": "Додати страву",
+  "searchDishesHint": "Пошук страв…",
+
+  "mealSlotsTitle": "Прийоми їжі",
+  "rename": "Перейменувати",
+  "addSlot": "Додати прийом",
+  "renameSlotTitle": "Перейменувати прийом",
+  "addSlotTitle": "Додати прийом",
+  "slotNameLabel": "Назва прийому",
+  "slotNameEmptyError": "Назва не може бути порожньою",
+  "slotNameExistsError": "Прийом з такою назвою вже існує",
+  "saveFailedSnackbar": "Не вдалося зберегти. Спробуйте ще раз.",
+  "languageTitle": "Мова",
+  "languageEnglish": "English",
+  "languageUkrainian": "Українська",
+
+  "shoppingListTitle": "Список покупок",
+  "comingSoon": "Список покупок — незабаром",
+
+  "labelBreakfast": "Сніданок",
+  "labelLunch": "Обід",
+  "labelDinner": "Вечеря"
+}
