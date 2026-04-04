@@ -24,6 +24,30 @@ class DishLibraryScreen extends ConsumerStatefulWidget {
 class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
   bool _importing = false;
 
+  Future<void> _saveDishes(
+      List<Dish> dishes, String successMessage) async {
+    setState(() => _importing = true);
+    try {
+      final repo = ref.read(dishRepositoryProvider);
+      for (final dish in dishes) {
+        await repo.saveDish(dish);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(successMessage)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Import failed. Please try again.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
+  }
+
   Future<void> _importFromCsv() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -35,8 +59,7 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
     final bytes = result.files.single.bytes;
     if (bytes == null) return;
 
-    final content = utf8.decode(bytes, allowMalformed: true);
-    final dishes = CsvDishParser.parse(content);
+    final dishes = CsvDishParser.parse(utf8.decode(bytes, allowMalformed: true));
 
     if (!mounted) return;
     if (dishes.isEmpty) {
@@ -67,32 +90,7 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-
-    setState(() => _importing = true);
-    try {
-      final repo = ref.read(dishRepositoryProvider);
-      for (final dish in dishes) {
-        await repo.saveDish(dish);
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${dishes.length} dishes imported successfully.'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Import failed. Please try again.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _importing = false);
-    }
+    await _saveDishes(dishes, '${dishes.length} dishes imported successfully.');
   }
 
   Future<void> _confirmImport() async {
@@ -117,30 +115,7 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-
-    setState(() => _importing = true);
-    try {
-      final repo = ref.read(dishRepositoryProvider);
-      for (final dish in DishSeeder.starterDishes) {
-        await repo.saveDish(dish);
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('7 dishes imported successfully.')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Import failed. Please try again.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _importing = false);
-    }
+    await _saveDishes(DishSeeder.starterDishes, '7 dishes imported successfully.');
   }
 
   @override
