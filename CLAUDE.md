@@ -104,13 +104,18 @@ Mobile-App/
 │   │   │       ├── meal_plan_screen.dart       # Week + 7-day TabBarView; slot defaults from userSlotsProvider
 │   │   │       └── meal_plan_providers.dart    # selectedWeekProvider, mealPlanProvider, mealPlanMutationProvider
 │   │   ├── dish_library/
-│   │   │   ├── data/dish_repository.dart     # Firestore CRUD: users/{uid}/dishes/{id}
-│   │   │   ├── domain/dish_model.dart        # Dish, Ingredient (extensible)
+│   │   │   ├── data/
+│   │   │   │   ├── dish_repository.dart      # Firestore CRUD: users/{uid}/dishes/{id}
+│   │   │   │   ├── dish_seeder.dart          # 7 starter Ukrainian breakfast dishes (seed_* IDs)
+│   │   │   │   └── csv_dish_parser.dart      # RFC-4180 CSV parser → List<Dish>; strips amounts, sets defaults
+│   │   │   ├── domain/
+│   │   │   │   ├── dish_model.dart           # Dish, Ingredient (extensible)
+│   │   │   │   └── product_model.dart        # ProductEntry (per-100g nutrition, defaultUnit)
 │   │   │   └── presentation/
-│   │   │       ├── dish_library_screen.dart  # List of dishes with FAB, edit/delete
+│   │   │       ├── dish_library_screen.dart  # List + dual FAB (add / import CSV) + starter import
 │   │   │       ├── dish_detail_screen.dart   # Read-only detail view (outside ShellRoute)
-│   │   │       ├── dish_form_screen.dart     # Add/Edit dish form (outside ShellRoute)
-│   │   │       └── dish_providers.dart       # dishesProvider, dishMutationProvider
+│   │   │       ├── dish_form_screen.dart     # Add/Edit dish form; product DB search + auto-scaling
+│   │   │       └── dish_providers.dart       # dishesProvider, dishMutationProvider, productsProvider
 │   │   ├── settings/
 │   │   │   └── presentation/
 │   │   │       └── settings_screen.dart      # Meal slot management: add / rename / delete / reorder
@@ -128,7 +133,8 @@ Mobile-App/
 ├── assets/
 │   ├── images/
 │   ├── icons/
-│   └── data/                            # Bundled product database (planned)
+│   └── data/                            # Bundled product database
+│       └── products.json                # 100 common foods (per-100g: kcal/protein/fat/carbs)
 ├── android/                             # Android native config
 ├── ios/                                 # iOS native config
 ├── pubspec.yaml
@@ -252,8 +258,31 @@ Before committing or pushing, verify:
 - Navigate to form: `context.push(AppRoutes.dishForm)` (add) or `context.push(AppRoutes.dishForm, extra: dish)` (edit)
 - Nutrition totals (calories/protein/fat/carbs) computed live from ingredients — never stored
 - Ingredient amounts stored as `double` per serving; `_fmtNum()` helper trims trailing `.0` in UI
-- Nutrition data: manual entry only for MVP; product database planned post-MVP
 - `DishMutationController` logs all save/delete successes and failures
+
+### Product Database
+- 100 common foods in `assets/data/products.json`; per-100g: kcal / protein / fat / carbs + `defaultUnit`
+- `ProductEntry` model in `lib/features/dish_library/domain/product_model.dart`
+- `productsProvider` (FutureProvider) in `dish_providers.dart` — loads from asset bundle once, cached
+- `_ProductSearchDialog` in `dish_form_screen.dart` — search + tap to auto-fill ingredient name, unit, nutrition
+- `_IngredientDialog` recalculates nutrition live as amount changes when a product is linked
+- Ingredient `productId`: `product.id` when linked to DB entry; `'manual_\${ms}'` for manual entry
+
+### Dish Import
+- **Starter dishes**: `DishSeeder.starterDishes` — 7 Ukrainian breakfast dishes with fixed `seed_*` IDs (safe re-import via Firestore `set()`)
+- **CSV import**: `CsvDishParser.parse(String)` in `csv_dish_parser.dart`
+  - Handles RFC-4180 format: quoted multi-line cells, `""` escape, trailing-newline-optional
+  - Column 1 = dish name, Column 2 = ingredient lines (one per line)
+  - Strips `" - amount unit"` suffix from each line to extract clean ingredient name
+  - Defaults per ingredient: `amountPerServing=1`, `unit='pcs'`, `protein=1`, `fat=1`, `carbs=1`, `calories=0`
+  - Dish IDs: `csv_\${base}_\${index}` — always creates new dishes (no overwrite on re-import)
+  - Skips rows where dish name or ingredients column is empty (header rows)
+  - Strips UTF-8 BOM at file start
+- **UI** (`DishLibraryScreen`):
+  - Dual FAB: small upload icon FAB (CSV) + primary `+` FAB (manual add)
+  - Empty state: "Import starter dishes" + "Import from CSV" buttons
+  - Import flow: file picker → parse → confirm dialog (shows dish count) → batch save to Firestore
+  - `file_picker: ^8.1.0` used with `withData: true` for cross-platform byte access
 
 ### Meal Plan
 - Firestore: `users/{uid}/mealPlans/{YYYY-MM-DD}` (Monday as document key)
