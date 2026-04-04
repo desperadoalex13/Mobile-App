@@ -266,6 +266,7 @@ Before committing or pushing, verify:
 - **Form**: `FilterChip` row between Servings and Ingredients; multi-select, any combination allowed
 - **Detail screen**: label chips rendered in the info row with `primaryContainer` colour
 - **Library tile**: labels appended to subtitle text (`· Breakfast, Lunch`)
+- **Filter bar** (`_LabelFilterBar`): horizontal scrollable chip row at top of dish list; `All` + one chip per label; tap to filter, tap active chip to clear; empty result shows `No "X" dishes.`
 
 ### Product Database
 - 100 common foods in `assets/data/products.json`; per-100g: kcal / protein / fat / carbs + `defaultUnit`
