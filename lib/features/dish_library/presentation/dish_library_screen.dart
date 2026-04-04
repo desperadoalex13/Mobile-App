@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../data/csv_dish_parser.dart';
 import '../data/dish_repository.dart';
 import '../data/dish_seeder.dart';
 import '../domain/dish_model.dart';
@@ -19,6 +23,77 @@ class DishLibraryScreen extends ConsumerStatefulWidget {
 
 class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
   bool _importing = false;
+
+  Future<void> _importFromCsv() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty || !mounted) return;
+
+    final bytes = result.files.single.bytes;
+    if (bytes == null) return;
+
+    final content = utf8.decode(bytes, allowMalformed: true);
+    final dishes = CsvDishParser.parse(content);
+
+    if (!mounted) return;
+    if (dishes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No dishes found in the selected file.')),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Import from CSV?'),
+        content: Text(
+          'Found ${dishes.length} dish${dishes.length == 1 ? '' : 'es'}. '
+          'They will be added to your library.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _importing = true);
+    try {
+      final repo = ref.read(dishRepositoryProvider);
+      for (final dish in dishes) {
+        await repo.saveDish(dish);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${dishes.length} dishes imported successfully.'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Import failed. Please try again.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
+  }
 
   Future<void> _confirmImport() async {
     final confirmed = await showDialog<bool>(
@@ -84,11 +159,23 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
     });
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'add-dish',
-        tooltip: 'Add dish',
-        onPressed: () => context.push(AppRoutes.dishForm),
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'import-csv',
+            tooltip: 'Import from CSV',
+            onPressed: _importing ? null : _importFromCsv,
+            child: const Icon(Icons.upload_file_outlined),
+          ),
+          const SizedBox(height: 8),
+          FloatingActionButton(
+            heroTag: 'add-dish',
+            tooltip: 'Add dish',
+            onPressed: () => context.push(AppRoutes.dishForm),
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
       body: dishesAsync.when(
         loading: () => const LoadingIndicator(),
@@ -100,6 +187,7 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
             ? _EmptyState(
                 onAdd: () => context.push(AppRoutes.dishForm),
                 onImport: _importing ? null : _confirmImport,
+                onImportCsv: _importing ? null : _importFromCsv,
               )
             : Stack(
                 children: [
@@ -144,10 +232,11 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
 // ============================================================================
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onAdd, this.onImport});
+  const _EmptyState({required this.onAdd, this.onImport, this.onImportCsv});
 
   final VoidCallback onAdd;
   final VoidCallback? onImport;
+  final VoidCallback? onImportCsv;
 
   @override
   Widget build(BuildContext context) {
@@ -186,6 +275,12 @@ class _EmptyState extends StatelessWidget {
               onPressed: onImport,
               icon: const Icon(Icons.download_outlined),
               label: const Text('Import starter dishes'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: onImportCsv,
+              icon: const Icon(Icons.upload_file_outlined),
+              label: const Text('Import from CSV'),
             ),
           ],
         ),

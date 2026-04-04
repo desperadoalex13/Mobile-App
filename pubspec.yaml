@@ -29,6 +29,9 @@ dependencies:
   # Logging
   path_provider: ^2.1.5
 
+  # File picking
+  file_picker: ^8.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
