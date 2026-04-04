@@ -260,6 +260,13 @@ Before committing or pushing, verify:
 - Ingredient amounts stored as `double` per serving; `_fmtNum()` helper trims trailing `.0` in UI
 - `DishMutationController` logs all save/delete successes and failures
 
+### Dish Labels
+- `Dish.labels: List<String>` — optional meal-type tags; stored in Firestore as `'labels'`; defaults to `[]` (backwards-compatible)
+- `Dish.availableLabels = ['Breakfast', 'Lunch', 'Dinner']` — single source of truth on the model
+- **Form**: `FilterChip` row between Servings and Ingredients; multi-select, any combination allowed
+- **Detail screen**: label chips rendered in the info row with `primaryContainer` colour
+- **Library tile**: labels appended to subtitle text (`· Breakfast, Lunch`)
+
 ### Product Database
 - 100 common foods in `assets/data/products.json`; per-100g: kcal / protein / fat / carbs + `defaultUnit`
 - `ProductEntry` model in `lib/features/dish_library/domain/product_model.dart`
