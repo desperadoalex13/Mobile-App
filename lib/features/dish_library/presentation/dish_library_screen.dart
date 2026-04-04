@@ -23,6 +23,7 @@ class DishLibraryScreen extends ConsumerStatefulWidget {
 
 class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
   bool _importing = false;
+  String _activeFilter = '';
 
   Future<void> _saveDishes(
       List<Dish> dishes, String successMessage) async {
@@ -158,45 +159,114 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
           message: 'Could not load dishes.',
           onRetry: () => ref.invalidate(dishesProvider),
         ),
-        data: (dishes) => dishes.isEmpty
-            ? _EmptyState(
-                onAdd: () => context.push(AppRoutes.dishForm),
-                onImport: _importing ? null : _confirmImport,
-                onImportCsv: _importing ? null : _importFromCsv,
-              )
-            : Stack(
+        data: (dishes) {
+          if (dishes.isEmpty) {
+            return _EmptyState(
+              onAdd: () => context.push(AppRoutes.dishForm),
+              onImport: _importing ? null : _confirmImport,
+              onImportCsv: _importing ? null : _importFromCsv,
+            );
+          }
+          final filtered = _activeFilter.isEmpty
+              ? dishes
+              : dishes
+                  .where((d) => d.labels.contains(_activeFilter))
+                  .toList();
+          return Stack(
+            children: [
+              Column(
                 children: [
-                  ListView.separated(
-                    itemCount: dishes.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, i) => _DishTile(dish: dishes[i]),
+                  _LabelFilterBar(
+                    active: _activeFilter,
+                    onChanged: (label) =>
+                        setState(() => _activeFilter = label),
                   ),
-                  if (_importing)
-                    const Positioned(
-                      top: 8,
-                      right: 16,
-                      child: Card(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No "$_activeFilter" dishes.',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                               ),
-                              SizedBox(width: 8),
-                              Text('Importing…'),
-                            ],
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, i) =>
+                                _DishTile(dish: filtered[i]),
                           ),
-                        ),
-                      ),
-                    ),
+                  ),
                 ],
               ),
+              if (_importing)
+                const Positioned(
+                  top: 8,
+                  right: 16,
+                  child: Card(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Importing…'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Label filter bar
+// ============================================================================
+
+class _LabelFilterBar extends StatelessWidget {
+  const _LabelFilterBar({required this.active, required this.onChanged});
+
+  final String active;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          FilterChip(
+            label: const Text('All'),
+            selected: active.isEmpty,
+            onSelected: (_) => onChanged(''),
+          ),
+          ...Dish.availableLabels.map((label) {
+            return Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: FilterChip(
+                label: Text(label),
+                selected: active == label,
+                onSelected: (_) => onChanged(active == label ? '' : label),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
