@@ -278,10 +278,11 @@ class _DishTile extends ConsumerWidget {
     final servingLabel =
         '${dish.servings} serving${dish.servings == 1 ? '' : 's'}';
     final calorieLabel = '${dish.totalCalories.round()} kcal';
+    final labelText = dish.labels.isEmpty ? '' : '  ·  ${dish.labels.join(', ')}';
 
     return ListTile(
       title: Text(dish.name),
-      subtitle: Text('$servingLabel · $calorieLabel'),
+      subtitle: Text('$servingLabel · $calorieLabel$labelText'),
       trailing: PopupMenuButton<String>(
         onSelected: (value) {
           if (value == 'edit') {

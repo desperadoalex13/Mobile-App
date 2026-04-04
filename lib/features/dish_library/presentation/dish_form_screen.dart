@@ -22,6 +22,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _servingsController;
   late final List<Ingredient> _ingredients;
+  late final List<String> _labels;
   late final List<TextEditingController> _instructionControllers;
 
   bool get _isEditing => widget.dish != null;
@@ -34,6 +35,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
     _servingsController =
         TextEditingController(text: (d?.servings ?? 1).toString());
     _ingredients = List.from(d?.ingredients ?? []);
+    _labels = List.from(d?.labels ?? []);
     _instructionControllers = (d?.instructions ?? [])
         .map((s) => TextEditingController(text: s))
         .toList();
@@ -62,6 +64,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
       name: _nameController.text.trim(),
       servings: int.parse(_servingsController.text.trim()),
       ingredients: _ingredients,
+      labels: List.from(_labels),
       instructions: _instructionControllers
           .map((c) => c.text.trim())
           .where((s) => s.isNotEmpty)
@@ -184,6 +187,26 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
                 if (n == null || n < 1) return 'Enter a number ≥ 1';
                 return null;
               },
+            ),
+            const SizedBox(height: 20),
+
+            // ── Labels ────────────────────────────────────────────────────
+            Text(
+              'Labels (optional)',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: Dish.availableLabels.map((label) {
+                return FilterChip(
+                  label: Text(label),
+                  selected: _labels.contains(label),
+                  onSelected: (selected) => setState(() {
+                    selected ? _labels.add(label) : _labels.remove(label);
+                  }),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 24),
 

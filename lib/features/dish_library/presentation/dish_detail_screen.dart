@@ -34,17 +34,24 @@ class DishDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Info row ────────────────────────────────────────────────────
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Chip(label: Text(servingLabel)),
-                const SizedBox(width: 12),
                 if (hasIngredients)
-                  Text(
-                    '${dish.totalCalories.round()} kcal total',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                  Chip(
+                    label: Text('${dish.totalCalories.round()} kcal'),
                   ),
+                ...dish.labels.map(
+                  (l) => Chip(
+                    label: Text(l),
+                    backgroundColor: colorScheme.primaryContainer,
+                    labelStyle:
+                        TextStyle(color: colorScheme.onPrimaryContainer),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),

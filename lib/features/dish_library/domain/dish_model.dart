@@ -6,14 +6,21 @@ class Dish {
     required this.name,
     required this.servings,
     required this.ingredients,
+    this.labels = const [],
     this.instructions = const [],
     this.extraFields = const {},
   });
+
+  static const availableLabels = ['Breakfast', 'Lunch', 'Dinner'];
 
   final String id;
   final String name;
   final int servings;
   final List<Ingredient> ingredients;
+
+  /// Meal-type labels — any subset of [availableLabels], optional.
+  final List<String> labels;
+
   final List<String> instructions;
 
   /// Extensible field map — new fields can be added without schema migration.
@@ -28,6 +35,7 @@ class Dish {
       ingredients: (data['ingredients'] as List<dynamic>)
           .map((i) => Ingredient.fromMap(i as Map<String, dynamic>))
           .toList(),
+      labels: List<String>.from(data['labels'] ?? []),
       instructions: List<String>.from(data['instructions'] ?? []),
       extraFields: Map<String, dynamic>.from(data['extra'] ?? {}),
     );
@@ -37,6 +45,7 @@ class Dish {
         'name': name,
         'servings': servings,
         'ingredients': ingredients.map((i) => i.toMap()).toList(),
+        'labels': labels,
         'instructions': instructions,
         'extra': extraFields,
       };
