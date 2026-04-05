@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' hide rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/locale/locale_provider.dart';
 import '../../../l10n/l10n.dart';
 import '../data/dish_repository.dart';
 import '../data/open_food_facts_service.dart';
@@ -776,8 +777,10 @@ class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
   Future<void> _searchOnline(String query) async {
     if (!mounted) return;
     setState(() => _isSearchingOnline = true);
-    final results =
-        await ref.read(openFoodFactsServiceProvider).search(query);
+    final languageCode = ref.read(localeProvider).languageCode;
+    final results = await ref
+        .read(openFoodFactsServiceProvider)
+        .search(query, languageCode: languageCode);
     if (!mounted) return;
     setState(() {
       _apiResults = results;

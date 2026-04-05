@@ -11,15 +11,26 @@ class OpenFoodFactsService {
   static const _userAgent = 'MealPlannerApp/1.0 (github.com/desperadoalex13)';
   static const _timeout = Duration(seconds: 8);
 
-  Future<List<ProductEntry>> search(String query) async {
+  /// [languageCode] — ISO 639-1 code (e.g. 'en', 'uk').
+  /// OFF returns [product_name_<languageCode>] when available; falls back to
+  /// the English [product_name] so results are never empty.
+  Future<List<ProductEntry>> search(
+    String query, {
+    String languageCode = 'en',
+  }) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return [];
 
-    final uri = Uri.parse(_baseUrl).replace(queryParameters: {
+    final params = <String, String>{
       'q': trimmed,
-      'fields': 'code,product_name,nutriments',
+      // Request both the English name and the localised name in one call.
+      'fields': 'code,product_name,product_name_$languageCode,nutriments',
       'page_size': '20',
-    });
+    };
+    // lc= tells OFF to prefer returning nutriment labels in that language.
+    if (languageCode != 'en') params['lc'] = languageCode;
+
+    final uri = Uri.parse(_baseUrl).replace(queryParameters: params);
 
     try {
       final response = await http
@@ -35,7 +46,12 @@ class OpenFoodFactsService {
       for (final item in rawProducts) {
         final p = item as Map<String, dynamic>;
         final code = (p['code'] as String?) ?? '';
-        final name = ((p['product_name'] as String?) ?? '').trim();
+
+        // Prefer the localised name; fall back to English product_name.
+        final nameLocal =
+            ((p['product_name_$languageCode'] as String?) ?? '').trim();
+        final nameEn = ((p['product_name'] as String?) ?? '').trim();
+        final name = nameLocal.isNotEmpty ? nameLocal : nameEn;
         if (code.isEmpty || name.isEmpty) continue;
 
         final n = (p['nutriments'] as Map<String, dynamic>?) ?? {};
