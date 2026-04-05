@@ -34,6 +34,9 @@ dependencies:
   # File picking
   file_picker: ^8.1.0
 
+  # Networking
+  http: ^1.2.0
+
   # Localisation
   intl: ^0.20.2
   shared_preferences: ^2.3.0

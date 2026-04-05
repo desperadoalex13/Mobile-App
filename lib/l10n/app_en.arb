@@ -139,6 +139,9 @@
   "searchDatabaseTitle": "Search database",
   "searchProductsHint": "Search products…",
   "noProductsFound": "No products found.",
+  "localSection": "Local database",
+  "onlineSection": "Online results",
+  "searchingOnline": "Searching online…",
 
   "weekTab": "Week",
   "monTab": "Mon",

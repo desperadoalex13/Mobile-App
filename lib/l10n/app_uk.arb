@@ -139,6 +139,9 @@
   "searchDatabaseTitle": "Пошук у базі",
   "searchProductsHint": "Пошук продуктів…",
   "noProductsFound": "Продуктів не знайдено.",
+  "localSection": "Локальна база",
+  "onlineSection": "Онлайн-результати",
+  "searchingOnline": "Пошук онлайн…",
 
   "weekTab": "Тиждень",
   "monTab": "Пн",

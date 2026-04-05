@@ -362,6 +362,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noProductsFound => 'No products found.';
 
   @override
+  String get localSection => 'Local database';
+
+  @override
+  String get onlineSection => 'Online results';
+
+  @override
+  String get searchingOnline => 'Searching online…';
+
+  @override
   String get weekTab => 'Week';
 
   @override

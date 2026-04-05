@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' hide rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/l10n.dart';
 import '../data/dish_repository.dart';
+import '../data/open_food_facts_service.dart';
 import '../domain/dish_model.dart';
 import '../domain/product_model.dart';
 import 'dish_providers.dart';
@@ -737,29 +740,63 @@ class _ProductSearchDialog extends ConsumerStatefulWidget {
 class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
   final _searchCtrl = TextEditingController();
   String _query = '';
+  List<ProductEntry> _apiResults = [];
+  bool _isSearchingOnline = false;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _searchCtrl.addListener(() => setState(() => _query = _searchCtrl.text));
+    _searchCtrl.addListener(_onQueryChanged);
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  void _onQueryChanged() {
+    final query = _searchCtrl.text;
+    setState(() {
+      _query = query;
+      _apiResults = [];
+    });
+    _debounce?.cancel();
+    if (query.trim().isEmpty) {
+      setState(() => _isSearchingOnline = false);
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      _searchOnline(query);
+    });
+  }
+
+  Future<void> _searchOnline(String query) async {
+    if (!mounted) return;
+    setState(() => _isSearchingOnline = true);
+    final results =
+        await ref.read(openFoodFactsServiceProvider).search(query);
+    if (!mounted) return;
+    setState(() {
+      _apiResults = results;
+      _isSearchingOnline = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final productsAsync = ref.watch(productsProvider);
+
     return Dialog(
       child: SizedBox(
         width: 360,
         height: 520,
         child: Column(
           children: [
+            // ── Title + close ─────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
@@ -777,6 +814,8 @@ class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
                 ],
               ),
             ),
+
+            // ── Search field ──────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
@@ -790,27 +829,87 @@ class _ProductSearchDialogState extends ConsumerState<_ProductSearchDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+
+            // ── Online loading indicator ──────────────────────────────────
+            if (_isSearchingOnline)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.searchingOnline,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              )
+            else
+              const SizedBox(height: 6),
+
+            // ── Results list ──────────────────────────────────────────────
             Expanded(
               child: productsAsync.when(
                 loading: () =>
                     const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Error: $e')),
-                data: (products) {
-                  final filtered = _query.trim().isEmpty
-                      ? products
-                      : products
+                data: (localProducts) {
+                  final localFiltered = _query.trim().isEmpty
+                      ? localProducts
+                      : localProducts
                           .where((p) => p.name
                               .toLowerCase()
-                              .contains(_query.toLowerCase().trim()))
+                              .contains(_query.trim().toLowerCase()))
                           .toList();
-                  if (filtered.isEmpty) {
+
+                  // Build flat list: section header strings + ProductEntry items.
+                  final items = <Object>[];
+                  final showSections = _query.trim().isNotEmpty &&
+                      (localFiltered.isNotEmpty || _apiResults.isNotEmpty);
+
+                  if (showSections && localFiltered.isNotEmpty) {
+                    items.add(l10n.localSection);
+                  }
+                  items.addAll(localFiltered);
+
+                  if (_apiResults.isNotEmpty) {
+                    items.add(l10n.onlineSection);
+                    items.addAll(_apiResults);
+                  }
+
+                  if (items.isEmpty && !_isSearchingOnline) {
                     return Center(child: Text(l10n.noProductsFound));
                   }
+
                   return ListView.builder(
-                    itemCount: filtered.length,
+                    itemCount: items.length,
                     itemBuilder: (context, i) {
-                      final p = filtered[i];
+                      final item = items[i];
+                      if (item is String) {
+                        // Section header
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: Text(
+                            item,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        );
+                      }
+                      final p = item as ProductEntry;
                       return ListTile(
                         dense: true,
                         title: Text(p.name),

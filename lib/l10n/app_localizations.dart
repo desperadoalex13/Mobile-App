@@ -734,6 +734,24 @@ abstract class AppLocalizations {
   /// **'No products found.'**
   String get noProductsFound;
 
+  /// No description provided for @localSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Local database'**
+  String get localSection;
+
+  /// No description provided for @onlineSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Online results'**
+  String get onlineSection;
+
+  /// No description provided for @searchingOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching online…'**
+  String get searchingOnline;
+
   /// No description provided for @weekTab.
   ///
   /// In en, this message translates to:

@@ -52,6 +52,8 @@ Users build a weekly meal plan with configurable daily meal slots (default: brea
 | State Management | Riverpod 2.x |
 | Navigation | Go Router 14.x |
 | Backend / API | Firebase (Auth, Firestore, Storage) |
+| External API | Open Food Facts (free, no key) |
+| HTTP | http 1.2.x |
 | Testing | Flutter Test |
 
 ---
@@ -268,13 +270,23 @@ Before committing or pushing, verify:
 - **Library tile**: labels appended to subtitle text (`· Breakfast, Lunch`)
 - **Filter bar** (`_LabelFilterBar`): horizontal scrollable chip row at top of dish list; `All` + one chip per label; tap to filter, tap active chip to clear; empty result shows `No "X" dishes.`
 
-### Product Database
+### Product Database (local)
 - 100 common foods in `assets/data/products.json`; per-100g: kcal / protein / fat / carbs + `defaultUnit`
 - `ProductEntry` model in `lib/features/dish_library/domain/product_model.dart`
 - `productsProvider` (FutureProvider) in `dish_providers.dart` — loads from asset bundle once, cached
 - `_ProductSearchDialog` in `dish_form_screen.dart` — search + tap to auto-fill ingredient name, unit, nutrition
 - `_IngredientDialog` recalculates nutrition live as amount changes when a product is linked
 - Ingredient `productId`: `product.id` when linked to DB entry; `'manual_\${ms}'` for manual entry
+
+### Open Food Facts API (online ingredient search)
+- `lib/features/dish_library/data/open_food_facts_service.dart` — `OpenFoodFactsService` + `openFoodFactsServiceProvider`
+- Free API, no key required; required header: `User-Agent: MealPlannerApp/1.0 (github.com/desperadoalex13)`
+- Endpoint: `GET https://world.openfoodfacts.org/api/v2/search?q=<term>&fields=code,product_name,nutriments&page_size=20`
+- Nutrition fields parsed: `nutriments["energy-kcal_100g"]`, `["proteins_100g"]`, `["fat_100g"]`, `["carbohydrates_100g"]`
+- Skips products with any missing nutrition; 8s timeout; all exceptions caught → returns `[]` silently
+- Returns `List<ProductEntry>` with `id: 'off_<barcode>'`, `category: 'online'`
+- `_ProductSearchDialog` shows local results instantly; 400ms debounce fires API call; online results appended with "Local database" / "Online results" section headers; small spinner + "Searching online…" text during fetch; silent fallback when offline
+- `http: ^1.2.0` in `pubspec.yaml`
 
 ### Dish Import
 - **Starter dishes**: `DishSeeder.starterDishes` — 7 Ukrainian breakfast dishes with fixed `seed_*` IDs (safe re-import via Firestore `set()`)

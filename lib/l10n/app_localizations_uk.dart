@@ -362,6 +362,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get noProductsFound => 'Продуктів не знайдено.';
 
   @override
+  String get localSection => 'Локальна база';
+
+  @override
+  String get onlineSection => 'Онлайн-результати';
+
+  @override
+  String get searchingOnline => 'Пошук онлайн…';
+
+  @override
   String get weekTab => 'Тиждень';
 
   @override
