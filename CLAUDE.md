@@ -281,11 +281,14 @@ Before committing or pushing, verify:
 ### Open Food Facts API (online ingredient search)
 - `lib/features/dish_library/data/open_food_facts_service.dart` — `OpenFoodFactsService` + `openFoodFactsServiceProvider`
 - Free API, no key required; required header: `User-Agent: MealPlannerApp/1.0 (github.com/desperadoalex13)`
-- Endpoint: `GET https://world.openfoodfacts.org/api/v2/search?q=<term>&fields=code,product_name,nutriments&page_size=20`
-- Nutrition fields parsed: `nutriments["energy-kcal_100g"]`, `["proteins_100g"]`, `["fat_100g"]`, `["carbohydrates_100g"]`
-- Skips products with any missing nutrition; 8s timeout; all exceptions caught → returns `[]` silently
-- Returns `List<ProductEntry>` with `id: 'off_<barcode>'`, `category: 'online'`
-- `_ProductSearchDialog` shows local results instantly; 400ms debounce fires API call; online results appended with "Local database" / "Online results" section headers; small spinner + "Searching online…" text during fetch; silent fallback when offline
+- **Endpoint**: legacy CGI `https://world.openfoodfacts.org/cgi/search.pl` (v2 returns 503 with `lc=uk`; CGI handles Cyrillic natively)
+- Params: `search_terms`, `search_simple=1`, `action=process`, `json=1`, `fields=code,product_name,product_name_<lc>,nutriments`, `page_size=20`
+- For non-English locales: adds `lc=<languageCode>` — OFF searches Ukrainian/other language product names directly
+- Nutrition fields: `nutriments["energy-kcal_100g"]`, `["proteins_100g"]`, `["fat_100g"]`, `["carbohydrates_100g"]`
+- Skips products with any missing nutrition field
+- **Retry logic**: 12s timeout; on failure or empty response → waits 800ms → retries once; all exceptions caught → returns `[]` silently
+- Returns `List<ProductEntry>` with `id: 'off_<barcode>'`, `category: 'online'`; prefers `product_name_<lc>`, falls back to `product_name`
+- `_ProductSearchDialog` reads `localeProvider` and passes `languageCode` to service; shows local results instantly; 400ms debounce fires API call; online results appended with "Local database" / "Online results" section headers; small spinner + "Searching online…" text during fetch; silent fallback when offline
 - `http: ^1.2.0` in `pubspec.yaml`
 
 ### Dish Import
