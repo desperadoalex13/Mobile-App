@@ -7,18 +7,19 @@ import 'package:http/http.dart' as http;
 import '../domain/product_model.dart';
 
 class OpenFoodFactsService {
-  static const _baseUrl = 'https://world.openfoodfacts.org/api/v2/search';
+  // The v2 search endpoint returns 503 when lc=uk is used.
+  // The legacy CGI endpoint handles Cyrillic queries reliably.
+  static const _baseUrl =
+      'https://world.openfoodfacts.org/cgi/search.pl';
   static const _userAgent = 'MealPlannerApp/1.0 (github.com/desperadoalex13)';
   static const _timeout = Duration(seconds: 8);
 
   /// Searches Open Food Facts for [query].
   ///
   /// [languageCode] — ISO 639-1 code ('en', 'uk', …).
-  /// When non-English the request includes `lc=<languageCode>`, which tells
-  /// OFF to search through product names in that language (e.g. searching
-  /// "курка" with lc=uk finds Ukrainian-tagged chicken products).
-  /// Results prefer the localised name field; fall back to English when the
-  /// localised name is absent in the OFF database.
+  /// When non-English, `lc=<languageCode>` is included so OFF returns
+  /// localised product names where available. The Cyrillic (or any Unicode)
+  /// query is sent as-is — the legacy CGI endpoint handles it natively.
   Future<List<ProductEntry>> search(
     String query, {
     String languageCode = 'en',
@@ -27,12 +28,13 @@ class OpenFoodFactsService {
     if (trimmed.isEmpty) return [];
 
     final params = <String, String>{
-      'q': trimmed,
-      // Request both the English name and the localised name in one call.
+      'search_terms': trimmed,
+      'search_simple': '1',
+      'action': 'process',
+      'json': '1',
       'fields': 'code,product_name,product_name_$languageCode,nutriments',
       'page_size': '20',
     };
-    // lc= instructs OFF to search and return results in that language.
     if (languageCode != 'en') params['lc'] = languageCode;
 
     final uri = Uri.parse(_baseUrl).replace(queryParameters: params);
@@ -52,7 +54,8 @@ class OpenFoodFactsService {
         final p = item as Map<String, dynamic>;
         final code = (p['code'] as String?) ?? '';
 
-        // Prefer the localised name; fall back to English product_name.
+        // Prefer the localised name field; fall back to the generic
+        // product_name (which already contains Cyrillic for UA/RU products).
         final nameLocal =
             ((p['product_name_$languageCode'] as String?) ?? '').trim();
         final nameEn = ((p['product_name'] as String?) ?? '').trim();
