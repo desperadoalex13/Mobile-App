@@ -8,37 +8,17 @@ import '../domain/product_model.dart';
 
 class OpenFoodFactsService {
   static const _baseUrl = 'https://world.openfoodfacts.org/api/v2/search';
-  static const _translateUrl = 'https://api.mymemory.translated.net/get';
   static const _userAgent = 'MealPlannerApp/1.0 (github.com/desperadoalex13)';
   static const _timeout = Duration(seconds: 8);
 
-  /// Translates [query] from [fromLanguage] to English using MyMemory.
-  /// Returns the original query on any error so search still works.
-  Future<String> _translateToEnglish(
-      String query, String fromLanguage) async {
-    try {
-      final uri = Uri.parse(_translateUrl).replace(queryParameters: {
-        'q': query,
-        'langpair': '$fromLanguage|en',
-      });
-      final response =
-          await http.get(uri).timeout(const Duration(seconds: 5));
-      if (response.statusCode != 200) return query;
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final translated =
-          ((json['responseData'] as Map<String, dynamic>?)?['translatedText']
-                  as String?)
-              ?.trim();
-      return (translated != null && translated.isNotEmpty) ? translated : query;
-    } catch (_) {
-      return query;
-    }
-  }
-
-  /// [languageCode] — ISO 639-1 code (e.g. 'en', 'uk').
-  /// When non-English, the query is translated to English before searching
-  /// OFF (so "курка" → "chicken" for the search), but results are returned
-  /// with the localised product name where available.
+  /// Searches Open Food Facts for [query].
+  ///
+  /// [languageCode] — ISO 639-1 code ('en', 'uk', …).
+  /// When non-English the request includes `lc=<languageCode>`, which tells
+  /// OFF to search through product names in that language (e.g. searching
+  /// "курка" with lc=uk finds Ukrainian-tagged chicken products).
+  /// Results prefer the localised name field; fall back to English when the
+  /// localised name is absent in the OFF database.
   Future<List<ProductEntry>> search(
     String query, {
     String languageCode = 'en',
@@ -46,19 +26,13 @@ class OpenFoodFactsService {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return [];
 
-    // Translate the query to English so OFF can find results regardless of
-    // which language the user types in.
-    final searchQuery = languageCode == 'en'
-        ? trimmed
-        : await _translateToEnglish(trimmed, languageCode);
-
     final params = <String, String>{
-      'q': searchQuery,
+      'q': trimmed,
       // Request both the English name and the localised name in one call.
       'fields': 'code,product_name,product_name_$languageCode,nutriments',
       'page_size': '20',
     };
-    // lc= tells OFF to prefer returning nutriment labels in that language.
+    // lc= instructs OFF to search and return results in that language.
     if (languageCode != 'en') params['lc'] = languageCode;
 
     final uri = Uri.parse(_baseUrl).replace(queryParameters: params);
