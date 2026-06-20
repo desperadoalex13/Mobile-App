@@ -79,8 +79,18 @@
     }
   },
   "importStarterDialogTitle": "Import starter dishes?",
-  "importStarterDialogContent": "7 breakfast dishes will be added to your library. Existing dishes with the same ID will be overwritten.",
-  "starterImportSuccess": "7 dishes imported successfully.",
+  "importStarterDialogContent": "{count, plural, =1{1 starter dish} other{{count} starter dishes}} will be added to your library. Existing dishes with the same ID will be overwritten.",
+  "@importStarterDialogContent": {
+    "placeholders": {
+      "count": { "type": "num", "format": "decimalPattern" }
+    }
+  },
+  "starterImportSuccess": "{count, plural, =1{1 dish imported successfully.} other{{count} dishes imported successfully.}}",
+  "@starterImportSuccess": {
+    "placeholders": {
+      "count": { "type": "num", "format": "decimalPattern" }
+    }
+  },
   "noDishesInFile": "No dishes found in the selected file.",
   "deleteDishTitle": "Delete dish?",
   "deleteDishContent": "Delete \"{name}\"? This cannot be undone.",

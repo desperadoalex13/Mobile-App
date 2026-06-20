@@ -79,8 +79,18 @@
     }
   },
   "importStarterDialogTitle": "Імпортувати початкові страви?",
-  "importStarterDialogContent": "7 сніданкових страв буде додано до вашої бібліотеки. Існуючі страви з тим самим ID будуть перезаписані.",
-  "starterImportSuccess": "7 страв успішно імпортовано.",
+  "importStarterDialogContent": "{count, plural, =1{1 початкову страву} other{{count} початкових страв}} буде додано до вашої бібліотеки. Існуючі страви з тим самим ID будуть перезаписані.",
+  "@importStarterDialogContent": {
+    "placeholders": {
+      "count": { "type": "num", "format": "decimalPattern" }
+    }
+  },
+  "starterImportSuccess": "{count, plural, =1{1 страву успішно імпортовано.} other{{count} страви успішно імпортовано.}}",
+  "@starterImportSuccess": {
+    "placeholders": {
+      "count": { "type": "num", "format": "decimalPattern" }
+    }
+  },
   "noDishesInFile": "Страви у вибраному файлі не знайдені.",
   "deleteDishTitle": "Видалити страву?",
   "deleteDishContent": "Видалити «{name}»? Це неможливо скасувати.",

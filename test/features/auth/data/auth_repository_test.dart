@@ -28,15 +28,27 @@ class MockDocumentReference extends Mock
 class MockDocumentSnapshot extends Mock
     implements DocumentSnapshot<Map<String, dynamic>> {}
 
+// ignore: subtype_of_sealed_class
+class MockWriteBatch extends Mock implements WriteBatch {}
+
+// ignore: subtype_of_sealed_class
+class FakeDocumentReference extends Fake implements DocumentReference<Object?> {}
+
 // ---------------------------------------------------------------------------
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(FakeDocumentReference());
+  });
+
   late MockFirebaseAuth mockAuth;
   late MockFirebaseFirestore mockFirestore;
   late MockUserCredential mockCredential;
   late MockUser mockUser;
   late MockCollectionReference mockCollection;
   late MockDocumentReference mockDocRef;
+  late MockCollectionReference mockDishesCollection;
+  late MockWriteBatch mockBatch;
   late AuthRepository repo;
 
   setUp(() {
@@ -46,12 +58,20 @@ void main() {
     mockUser = MockUser();
     mockCollection = MockCollectionReference();
     mockDocRef = MockDocumentReference();
+    mockDishesCollection = MockCollectionReference();
+    mockBatch = MockWriteBatch();
 
     repo = AuthRepository(mockAuth, mockFirestore);
 
     // Default Firestore chain
     when(() => mockFirestore.collection('users')).thenReturn(mockCollection);
     when(() => mockCollection.doc(any())).thenReturn(mockDocRef);
+    when(() => mockDocRef.collection('dishes'))
+        .thenReturn(mockDishesCollection);
+    when(() => mockDishesCollection.doc(any())).thenReturn(mockDocRef);
+    when(() => mockFirestore.batch()).thenReturn(mockBatch);
+    when(() => mockBatch.set(any(), any())).thenReturn(null);
+    when(() => mockBatch.commit()).thenAnswer((_) async {});
   });
 
   group('signInWithEmail', () {

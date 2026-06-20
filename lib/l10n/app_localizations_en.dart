@@ -212,11 +212,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importStarterDialogTitle => 'Import starter dishes?';
 
   @override
-  String get importStarterDialogContent =>
-      '7 breakfast dishes will be added to your library. Existing dishes with the same ID will be overwritten.';
+  String importStarterDialogContent(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString starter dishes',
+      one: '1 starter dish',
+    );
+    return '$_temp0 will be added to your library. Existing dishes with the same ID will be overwritten.';
+  }
 
   @override
-  String get starterImportSuccess => '7 dishes imported successfully.';
+  String starterImportSuccess(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString dishes imported successfully.',
+      one: '1 dish imported successfully.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get noDishesInFile => 'No dishes found in the selected file.';

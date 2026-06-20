@@ -449,14 +449,14 @@ abstract class AppLocalizations {
   /// No description provided for @importStarterDialogContent.
   ///
   /// In en, this message translates to:
-  /// **'7 breakfast dishes will be added to your library. Existing dishes with the same ID will be overwritten.'**
-  String get importStarterDialogContent;
+  /// **'{count, plural, =1{1 starter dish} other{{count} starter dishes}} will be added to your library. Existing dishes with the same ID will be overwritten.'**
+  String importStarterDialogContent(num count);
 
   /// No description provided for @starterImportSuccess.
   ///
   /// In en, this message translates to:
-  /// **'7 dishes imported successfully.'**
-  String get starterImportSuccess;
+  /// **'{count, plural, =1{1 dish imported successfully.} other{{count} dishes imported successfully.}}'**
+  String starterImportSuccess(num count);
 
   /// No description provided for @noDishesInFile.
   ///

@@ -99,7 +99,8 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.importStarterDialogTitle),
-        content: Text(l10n.importStarterDialogContent),
+        content: Text(
+            l10n.importStarterDialogContent(DishSeeder.starterDishes.length)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -113,8 +114,8 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await _saveDishes(
-        DishSeeder.starterDishes, context.l10n.starterImportSuccess);
+    await _saveDishes(DishSeeder.starterDishes,
+        context.l10n.starterImportSuccess(DishSeeder.starterDishes.length));
   }
 
   @override

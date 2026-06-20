@@ -212,11 +212,34 @@ class AppLocalizationsUk extends AppLocalizations {
   String get importStarterDialogTitle => 'Імпортувати початкові страви?';
 
   @override
-  String get importStarterDialogContent =>
-      '7 сніданкових страв буде додано до вашої бібліотеки. Існуючі страви з тим самим ID будуть перезаписані.';
+  String importStarterDialogContent(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString початкових страв',
+      one: '1 початкову страву',
+    );
+    return '$_temp0 буде додано до вашої бібліотеки. Існуючі страви з тим самим ID будуть перезаписані.';
+  }
 
   @override
-  String get starterImportSuccess => '7 страв успішно імпортовано.';
+  String starterImportSuccess(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString страви успішно імпортовано.',
+      one: '1 страву успішно імпортовано.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get noDishesInFile => 'Страви у вибраному файлі не знайдені.';

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/firebase/firebase_providers.dart';
+import '../../dish_library/data/dish_seeder.dart';
 import '../domain/user_profile.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -41,6 +42,18 @@ class AuthRepository {
     );
 
     await _usersCollection.doc(uid).set(profile.toFirestore());
+    await _seedStarterDishes(uid);
+  }
+
+  /// Pre-populates a new user's dish library with starter dishes so they
+  /// have something to plan meals with right away, instead of an empty list.
+  Future<void> _seedStarterDishes(String uid) async {
+    final batch = _firestore.batch();
+    final dishesCollection = _usersCollection.doc(uid).collection('dishes');
+    for (final dish in DishSeeder.starterDishes) {
+      batch.set(dishesCollection.doc(dish.id), dish.toFirestore());
+    }
+    await batch.commit();
   }
 
   Future<void> signOut() => _auth.signOut();
