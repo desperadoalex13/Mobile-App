@@ -1010,11 +1010,29 @@ abstract class AppLocalizations {
   /// **'Shopping List'**
   String get shoppingListTitle;
 
-  /// No description provided for @comingSoon.
+  /// No description provided for @shoppingListEmpty.
   ///
   /// In en, this message translates to:
-  /// **'Shopping List — coming soon'**
-  String get comingSoon;
+  /// **'No items yet. Add dishes to your meal plan to generate a shopping list.'**
+  String get shoppingListEmpty;
+
+  /// No description provided for @loadShoppingListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load shopping list.'**
+  String get loadShoppingListError;
+
+  /// No description provided for @copyShoppingList.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy list'**
+  String get copyShoppingList;
+
+  /// No description provided for @shoppingListCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping list copied to clipboard.'**
+  String get shoppingListCopied;
 
   /// No description provided for @labelBreakfast.
   ///

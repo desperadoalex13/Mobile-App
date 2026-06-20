@@ -210,7 +210,10 @@
   "languageUkrainian": "Ukrainian",
 
   "shoppingListTitle": "Shopping List",
-  "comingSoon": "Shopping List — coming soon",
+  "shoppingListEmpty": "No items yet. Add dishes to your meal plan to generate a shopping list.",
+  "loadShoppingListError": "Could not load shopping list.",
+  "copyShoppingList": "Copy list",
+  "shoppingListCopied": "Shopping list copied to clipboard.",
 
   "labelBreakfast": "Breakfast",
   "labelLunch": "Lunch",

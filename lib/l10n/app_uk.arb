@@ -210,7 +210,10 @@
   "languageUkrainian": "Українська",
 
   "shoppingListTitle": "Список покупок",
-  "comingSoon": "Список покупок — незабаром",
+  "shoppingListEmpty": "Поки немає товарів. Додайте страви до плану харчування, щоб сформувати список покупок.",
+  "loadShoppingListError": "Не вдалося завантажити список покупок.",
+  "copyShoppingList": "Копіювати список",
+  "shoppingListCopied": "Список покупок скопійовано в буфер обміну.",
 
   "labelBreakfast": "Сніданок",
   "labelLunch": "Обід",

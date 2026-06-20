@@ -527,7 +527,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shoppingListTitle => 'Shopping List';
 
   @override
-  String get comingSoon => 'Shopping List — coming soon';
+  String get shoppingListEmpty =>
+      'No items yet. Add dishes to your meal plan to generate a shopping list.';
+
+  @override
+  String get loadShoppingListError => 'Could not load shopping list.';
+
+  @override
+  String get copyShoppingList => 'Copy list';
+
+  @override
+  String get shoppingListCopied => 'Shopping list copied to clipboard.';
 
   @override
   String get labelBreakfast => 'Breakfast';

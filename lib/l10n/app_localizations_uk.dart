@@ -528,7 +528,17 @@ class AppLocalizationsUk extends AppLocalizations {
   String get shoppingListTitle => 'Список покупок';
 
   @override
-  String get comingSoon => 'Список покупок — незабаром';
+  String get shoppingListEmpty =>
+      'Поки немає товарів. Додайте страви до плану харчування, щоб сформувати список покупок.';
+
+  @override
+  String get loadShoppingListError => 'Не вдалося завантажити список покупок.';
+
+  @override
+  String get copyShoppingList => 'Копіювати список';
+
+  @override
+  String get shoppingListCopied => 'Список покупок скопійовано в буфер обміну.';
 
   @override
   String get labelBreakfast => 'Сніданок';

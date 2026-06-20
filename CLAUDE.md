@@ -122,8 +122,11 @@ Mobile-App/
 │   │   │   └── presentation/
 │   │   │       └── settings_screen.dart      # Meal slot management: add / rename / delete / reorder
 │   │   └── shopping_list/
-│   │       ├── domain/shopping_list_model.dart
-│   │       └── presentation/shopping_list_screen.dart
+│   │       ├── data/shopping_list_repository.dart    # Persists purchased-item keys per week
+│   │       ├── domain/shopping_list_model.dart        # ShoppingList.fromMealPlan() aggregation
+│   │       └── presentation/
+│   │           ├── shopping_list_screen.dart          # Week header, category sections, copy-to-clipboard
+│   │           └── shopping_list_providers.dart       # shoppingListProvider, purchasedKeysProvider, mutation
 │   └── shared/
 │       ├── widgets/
 │       │   ├── loading_indicator.dart
@@ -292,7 +295,9 @@ Before committing or pushing, verify:
 - `http: ^1.2.0` in `pubspec.yaml`
 
 ### Dish Import
-- **Starter dishes**: `DishSeeder.starterDishes` — 7 Ukrainian breakfast dishes with fixed `seed_*` IDs (safe re-import via Firestore `set()`)
+- **Starter dishes**: `DishSeeder.starterDishes` — 17 Ukrainian dishes (7 breakfast / 5 lunch / 5 dinner) with fixed `seed_*` IDs (safe re-import via Firestore `set()`) and `labels` set to match meal type
+- **Auto-seed on registration**: `AuthRepository.registerWithEmail` batch-writes all starter dishes into the new user's `dishes` subcollection right after creating the Firestore profile — new users see a populated library immediately, no manual import needed
+- The "Import starter dishes" button in `DishLibraryScreen` remains as a fallback for re-importing/restoring (e.g. existing users, or after deleting dishes); dialog/snackbar text shows the dish count dynamically via `DishSeeder.starterDishes.length`
 - **CSV import**: `CsvDishParser.parse(String)` in `csv_dish_parser.dart`
   - Handles RFC-4180 format: quoted multi-line cells, `""` escape, trailing-newline-optional
   - Column 1 = dish name, Column 2 = ingredient lines (one per line)
@@ -315,6 +320,16 @@ Before committing or pushing, verify:
 - `TabController(length: 8)` — Week overview + 7 individual day tabs
 - Slot defaults come from `userSlotsProvider` (not hardcoded `MealSlot.defaults`)
 - Copy week / copy day from previous week — returns `bool hadContent` for snackbar feedback
+
+### Shopping List
+- **Dynamic, not stored**: `ShoppingList.fromMealPlan()` in `shopping_list_model.dart` regenerates the full list on every read from the selected week's `MealPlan` + `dishesProvider` + `productsProvider` — only checked-off state is persisted
+- Aggregation: walks every `day.mealSlots[].dishIds` in the week, resolves each dish from the library, sums `ingredient.amountPerServing` grouped by `'${name.toLowerCase()}|$unit'` (so the same dish eaten on multiple days adds up correctly)
+- Category resolution: matches `ingredient.productId` against the local product DB (`productsProvider`) for its `category`; unmatched ingredients (manual entries, online OFF results) fall back to an "Other" bucket
+- `ShoppingItem.key` (`'${name}|${unit}'` lowercased) is the stable identity used to persist purchased state across regenerations
+- **Persistence**: `ShoppingListRepository` at `users/{uid}/shoppingLists/{weekId}` stores only `{purchasedKeys: [...]}`; toggling uses `FieldValue.arrayUnion`/`arrayRemove`
+- `shoppingListProvider` (`Provider<AsyncValue<ShoppingList>>`) manually composes `mealPlanProvider` + `dishesProvider` + `productsProvider` + `purchasedKeysProvider` (loading/error propagated from any of the four)
+- `ShoppingListScreen`: week header (reuses `selectedWeekProvider` nav, same chevron/Today pattern as Meal Plan) + category sections with `CheckboxListTile` (checked items sink to the bottom of their category, strikethrough text)
+- "Copy list" button formats the grouped list as plain text and writes it via `Clipboard.setData` (`package:flutter/services.dart` — no new dependency) — confirmed via snackbar
 
 ### Configurable Meal Slots
 - `UserProfile.mealSlots: List<String>` stored in Firestore at `users/{uid}`
@@ -344,7 +359,7 @@ Before committing or pushing, verify:
 - All widget tests that render screens must wrap with `AppLocalizations.localizationsDelegates` + `supportedLocales`
 
 ### Testing
-- **82 tests** in `test/` — all pass, zero analyzer issues
+- **83 tests** in `test/` — all pass, zero analyzer issues
 - `mocktail: ^1.0.4` (not ^0.3.0 — conflicts with custom_lint)
 - `// ignore: subtype_of_sealed_class` required for mocking Firestore sealed classes
 - Widget test stubs for `authControllerProvider` must **extend `AuthController`**, not `AsyncNotifier<void>` directly
