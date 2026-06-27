@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Tableplan app icon: a fork and spoon crossing on a clock-face plate surrounded by seven seats">
+  <title>Tableplan app icon v2</title>
+  <rect width="1024" height="1024" rx="228" fill="#0E9384"/>
+  <g fill="#F8F2E5">
+    <circle cx="512" cy="97" r="56"/>
+    <circle cx="836.4" cy="253.2" r="56"/>
+    <circle cx="916.6" cy="604.3" r="56"/>
+    <circle cx="692.1" cy="885.9" r="56"/>
+    <circle cx="331.9" cy="885.9" r="56"/>
+    <circle cx="107.4" cy="604.3" r="56"/>
+    <circle cx="187.6" cy="253.2" r="56"/>
+  </g>
+  <circle cx="512" cy="512" r="290" fill="#F8F2E5"/>
+  <g transform="translate(512 512) scale(1.57)" fill="#0E9384">
+    <circle r="160" fill="none" stroke="#0E9384" stroke-width="14"/>
+    <g transform="rotate(-60)">
+      <rect x="-7" y="-100" width="14" height="172" rx="7"/>
+      <rect x="-20" y="-104" width="40" height="10" rx="4"/>
+      <rect x="-18.5" y="-145" width="9" height="45" rx="4.5"/>
+      <rect x="-4.5" y="-145" width="9" height="45" rx="4.5"/>
+      <rect x="9.5" y="-145" width="9" height="45" rx="4.5"/>
+    </g>
+    <g transform="rotate(60)">
+      <rect x="-7" y="-78" width="14" height="150" rx="7"/>
+      <ellipse cx="0" cy="-109" rx="24" ry="36"/>
+    </g>
+    <circle r="16" fill="#0E9384"/>
+  </g>
+</svg>
