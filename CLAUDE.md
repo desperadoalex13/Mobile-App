@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working in this repository.
 
 ## Project Overview
 
-**Tableplan** — Meal Planning Mobile Application — Version 1.2.0 | 2026
+**Tableplan** — Meal Planning Mobile Application — Version 1.3.0 | 2026
 
 A practical tool that solves the daily household problem of deciding what to cook. Users build a weekly meal plan in a structured format and get tools to organize nutrition, generate shopping lists, and track macros automatically.
 
@@ -277,11 +277,25 @@ Before committing or pushing, verify:
 
 ### Dish Labels
 - `Dish.labels: List<String>` — optional meal-type tags; stored in Firestore as `'labels'`; defaults to `[]` (backwards-compatible)
-- `Dish.availableLabels = ['Breakfast', 'Lunch', 'Dinner']` — single source of truth on the model
+- `Dish.availableLabels = ['Breakfast', 'Lunch', 'Dinner']` — single source of truth on the model, fixed (not user-editable)
 - **Form**: `FilterChip` row between Servings and Ingredients; multi-select, any combination allowed
 - **Detail screen**: label chips rendered in the info row with `primaryContainer` colour
 - **Library tile**: labels appended to subtitle text (`· Breakfast, Lunch`)
 - **Filter bar** (`_LabelFilterBar`): horizontal scrollable chip row at top of dish list; `All` + one chip per label; tap to filter, tap active chip to clear; empty result shows `No "X" dishes.`
+
+### Dish Tags (food-type categorization)
+- Separate axis from meal-time `labels` above — covers food type instead (e.g. Dessert, Salad, Meat, Fish), and is **user-editable** (unlike the fixed `availableLabels`)
+- `Dish.tags: List<String>` — stored in Firestore as `'tags'`; defaults to `[]`
+- `UserProfile.dishTags: List<String>` — per-user configurable tag list, stored at `users/{uid}`; `UserProfile.defaultDishTags = ['Dessert', 'Salad', 'Side dish', 'Pasta', 'Meat', 'Fish', 'Fastfood']` is the fallback for new accounts
+- `userTagsProvider` (Provider<List<String>>) in `profile_providers.dart` — derived list, same pattern as `userSlotsProvider`
+- `profileMutationProvider.updateTags(List<String>)` persists changes
+- **Settings screen**: "Dish Tags" section below Meal Slots — identical UI pattern (add/rename/delete/reorder via `ReorderableListView`); unlike meal slots, tags can be deleted down to zero (no "at least 1" guard) since a dish doesn't require any tags
+- **Dish form**: second `FilterChip` row below the meal-time Labels row, driven live from `ref.watch(userTagsProvider)` (not a hardcoded list)
+- **Detail screen**: tag chips rendered with `tertiaryContainer` colour to visually distinguish from meal-time label chips (`primaryContainer`)
+- **Library tile**: tags appended to subtitle after labels (`· Breakfast  ·  Salad, Meat`)
+- **Library filter bar** (`_TagFilterBar`): second horizontal chip row below `_LabelFilterBar`; both filters apply simultaneously (AND); empty-result message falls back to `l10n.noMatches` whenever a tag filter is active (since `noFilteredDishes({label})` only has one placeholder)
+- **Meal-plan dish picker** (`_DishPickerDialog` in `meal_plan_screen.dart`): same tag filter chips added above the dish list, combined with the existing text search (AND) — lets the user narrow the whole library by category before adding a dish to a slot
+- None of the 67 starter dishes have tags pre-assigned (only meal-time `labels`) — tagging the starter library was out of scope for this feature; tags are populated by users themselves
 
 ### Product Database (local)
 - 100 common foods in `assets/data/products.json`; per-100g: kcal / protein / fat / carbs + `defaultUnit`
@@ -305,11 +319,11 @@ Before committing or pushing, verify:
 - `http: ^1.2.0` in `pubspec.yaml`
 
 ### Dish Import
-- **Starter dishes**: `DishSeeder.starterDishes` — 54 Ukrainian dishes (8 breakfast / 29 lunch / 17 dinner) with fixed `seed_*` IDs (safe re-import via Firestore `set()`) and `labels` set to match meal type
+- **Starter dishes**: `DishSeeder.starterDishes` — 67 Ukrainian dishes (8 breakfast / 43 lunch / 16 dinner) with fixed `seed_*` IDs (safe re-import via Firestore `set()`) and `labels` set to match meal type
 - **Auto-seed on registration**: `AuthRepository.registerWithEmail` batch-writes all starter dishes into the new user's `dishes` subcollection right after creating the Firestore profile — new users see a populated library immediately, no manual import needed
 - The "Import starter dishes" button in `DishLibraryScreen` remains as a fallback for re-importing/restoring (e.g. existing users, or after deleting dishes); dialog/snackbar text shows the dish count dynamically via `DishSeeder.starterDishes.length`
 - **Import is additive/upsert-only, never deletes**: removing a dish from `DishSeeder.starterDishes` does not remove it from a user's existing Firestore library — only new/still-listed IDs get written. Existing accounts keep stale dishes from older seeder versions until manually deleted (⋮ → Delete on the dish tile) or the user re-registers a fresh account
-- **Manual (non-DB) ingredient macro estimates** used across starter dishes when no `assets/data/products.json` entry exists — id prefix `manual_*`, falls back to "Other" shopping-list category: `manual_lavash`, `manual_prunes`, `manual_chicken_liver`, `manual_cream` (cooking cream, lighter than DB's `heavy_cream`), `manual_ground_chicken`, `manual_ground_turkey`, `manual_frozen_veg_mix`, `manual_pelmeni`, `manual_varenyky_pf`, `manual_mussels`, `manual_bones` (broth bones), `manual_greens`, `manual_pickles`, `manual_sauce` (shawarma sauce), `manual_waffle_filling`, `manual_spice` (generic trivial seasoning, 0 macros, reused for pepper/paprika/bay leaf/herbs/etc.), `manual_nonfood` (cooking sleeve/parchment — zero nutrition, kept for shopping-list completeness)
+- **Manual (non-DB) ingredient macro estimates** used across starter dishes when no `assets/data/products.json` entry exists — id prefix `manual_*`, falls back to "Other" shopping-list category: `manual_lavash`, `manual_prunes`, `manual_chicken_liver`, `manual_cream` (cooking cream, lighter than DB's `heavy_cream`), `manual_ground_chicken`, `manual_ground_turkey`, `manual_frozen_veg_mix`, `manual_pelmeni`, `manual_varenyky_pf`, `manual_mussels`, `manual_bones` (broth bones), `manual_greens`, `manual_pickles`, `manual_sauce` (shawarma sauce), `manual_waffle_filling`, `manual_beet`, `manual_raisins`, `manual_radish`, `manual_spice` (generic trivial seasoning, 0 macros, reused for pepper/paprika/bay leaf/herbs/etc.), `manual_nonfood` (cooking sleeve/parchment — zero nutrition, kept for shopping-list completeness)
 - Garlic cloves converted to grams at ~3g/clove; whole-item ingredients (eggs, bananas, lavash) converted to grams using established per-item weight assumptions (1 egg≈60g, 1 banana≈120g, 1 lavash≈80g) consistent with pre-existing dishes
 - **CSV import**: `CsvDishParser.parse(String)` in `csv_dish_parser.dart`
   - Handles RFC-4180 format: quoted multi-line cells, `""` escape, trailing-newline-optional
@@ -372,7 +386,7 @@ Before committing or pushing, verify:
 - All widget tests that render screens must wrap with `AppLocalizations.localizationsDelegates` + `supportedLocales`
 
 ### Testing
-- **83 tests** in `test/` — all pass, zero analyzer issues
+- **87 tests** in `test/` — all pass, zero analyzer issues
 - `mocktail: ^1.0.4` (not ^0.3.0 — conflicts with custom_lint)
 - `// ignore: subtype_of_sealed_class` required for mocking Firestore sealed classes
 - Widget test stubs for `authControllerProvider` must **extend `AuthController`**, not `AsyncNotifier<void>` directly

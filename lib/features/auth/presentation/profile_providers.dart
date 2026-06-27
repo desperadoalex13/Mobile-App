@@ -20,6 +20,12 @@ final userSlotsProvider = Provider<List<String>>((ref) {
       UserProfile.defaultMealSlots;
 });
 
+/// Derived list of dish food-type tags; falls back to defaults until profile loads.
+final userTagsProvider = Provider<List<String>>((ref) {
+  return ref.watch(userProfileProvider).valueOrNull?.dishTags ??
+      UserProfile.defaultDishTags;
+});
+
 /// Persists changes to the user's meal slot list.
 final profileMutationProvider =
     AsyncNotifierProvider<ProfileMutationNotifier, void>(
@@ -47,6 +53,26 @@ class ProfileMutationNotifier extends AsyncNotifier<void> {
       );
     } else {
       AppLogService.instance.info('Meal slots updated: $slots');
+    }
+  }
+
+  Future<void> updateTags(List<String> tags) async {
+    state = const AsyncLoading();
+    final uid = ref.read(authStateProvider).valueOrNull?.uid;
+    if (uid == null) return;
+    state = await AsyncValue.guard(
+      () => ref
+          .read(authRepositoryProvider)
+          .updateProfile(uid, {'dishTags': tags}),
+    );
+    if (state is AsyncError<void>) {
+      AppLogService.instance.error(
+        'updateTags failed',
+        error: (state as AsyncError<void>).error,
+        stackTrace: (state as AsyncError<void>).stackTrace,
+      );
+    } else {
+      AppLogService.instance.info('Dish tags updated: $tags');
     }
   }
 }

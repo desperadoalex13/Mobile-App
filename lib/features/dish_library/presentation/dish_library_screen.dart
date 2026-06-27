@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../l10n/l10n.dart';
+import '../../auth/presentation/profile_providers.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../data/csv_dish_parser.dart';
@@ -25,6 +26,7 @@ class DishLibraryScreen extends ConsumerStatefulWidget {
 class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
   bool _importing = false;
   String _activeFilter = '';
+  String _activeTagFilter = '';
 
   Future<void> _saveDishes(
       List<Dish> dishes, String successMessage) async {
@@ -167,11 +169,13 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
               onImportCsv: _importing ? null : _importFromCsv,
             );
           }
-          final filtered = _activeFilter.isEmpty
-              ? dishes
-              : dishes
-                  .where((d) => d.labels.contains(_activeFilter))
-                  .toList();
+          final filtered = dishes.where((d) {
+            final matchesLabel =
+                _activeFilter.isEmpty || d.labels.contains(_activeFilter);
+            final matchesTag = _activeTagFilter.isEmpty ||
+                d.tags.contains(_activeTagFilter);
+            return matchesLabel && matchesTag;
+          }).toList();
           return Stack(
             children: [
               Column(
@@ -181,11 +185,18 @@ class _DishLibraryScreenState extends ConsumerState<DishLibraryScreen> {
                     onChanged: (label) =>
                         setState(() => _activeFilter = label),
                   ),
+                  _TagFilterBar(
+                    active: _activeTagFilter,
+                    onChanged: (tag) =>
+                        setState(() => _activeTagFilter = tag),
+                  ),
                   Expanded(
                     child: filtered.isEmpty
                         ? Center(
                             child: Text(
-                              l10n.noFilteredDishes(_activeFilter),
+                              _activeTagFilter.isEmpty
+                                  ? l10n.noFilteredDishes(_activeFilter)
+                                  : l10n.noMatches,
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -274,6 +285,47 @@ class _LabelFilterBar extends StatelessWidget {
 }
 
 // ============================================================================
+// Tag filter bar
+// ============================================================================
+
+class _TagFilterBar extends ConsumerWidget {
+  const _TagFilterBar({required this.active, required this.onChanged});
+
+  final String active;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final tags = ref.watch(userTagsProvider);
+    if (tags.isEmpty) return const SizedBox.shrink();
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
+      child: Row(
+        children: [
+          FilterChip(
+            label: Text(l10n.all),
+            selected: active.isEmpty,
+            onSelected: (_) => onChanged(''),
+          ),
+          ...tags.map((tag) {
+            return Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: FilterChip(
+                label: Text(tag),
+                selected: active == tag,
+                onSelected: (_) => onChanged(active == tag ? '' : tag),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
 // Empty state
 // ============================================================================
 
@@ -352,10 +404,12 @@ class _DishTile extends ConsumerWidget {
     final labelText = dish.labels.isEmpty
         ? ''
         : '  ·  ${dish.labels.map(context.localizeLabel).join(', ')}';
+    final tagText =
+        dish.tags.isEmpty ? '' : '  ·  ${dish.tags.join(', ')}';
 
     return ListTile(
       title: Text(dish.name),
-      subtitle: Text('$calorieLabel$labelText'),
+      subtitle: Text('$calorieLabel$labelText$tagText'),
       trailing: PopupMenuButton<String>(
         onSelected: (value) {
           if (value == 'edit') {

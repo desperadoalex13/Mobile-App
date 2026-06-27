@@ -14,16 +14,23 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<String>? _slots;
+  List<String>? _tags;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _slots ??= List<String>.from(ref.read(userSlotsProvider));
+    _tags ??= List<String>.from(ref.read(userTagsProvider));
   }
 
   void _saveSlots(List<String> slots) {
     setState(() => _slots = slots);
     ref.read(profileMutationProvider.notifier).updateSlots(slots);
+  }
+
+  void _saveTags(List<String> tags) {
+    setState(() => _tags = tags);
+    ref.read(profileMutationProvider.notifier).updateTags(tags);
   }
 
   @override
@@ -32,9 +39,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     // Keep local state in sync when profile updates arrive from Firestore.
     ref.listen(userProfileProvider, (_, next) {
-      final incoming = next.valueOrNull?.mealSlots;
-      if (incoming != null && mounted) {
-        setState(() => _slots = List<String>.from(incoming));
+      final incomingSlots = next.valueOrNull?.mealSlots;
+      if (incomingSlots != null && mounted) {
+        setState(() => _slots = List<String>.from(incomingSlots));
+      }
+      final incomingTags = next.valueOrNull?.dishTags;
+      if (incomingTags != null && mounted) {
+        setState(() => _tags = List<String>.from(incomingTags));
       }
     });
 
@@ -51,6 +62,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
 
     final slots = _slots ?? [];
+    final tags = _tags ?? [];
     final currentLocale = ref.watch(localeProvider);
 
     return ListView(
@@ -124,6 +136,56 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           label: Text(l10n.addSlot),
           onPressed: () => _showAddDialog(context),
         ),
+
+        const SizedBox(height: 24),
+        const Divider(),
+        const SizedBox(height: 8),
+
+        // ── Dish Tags ─────────────────────────────────────────────────────
+        Text(l10n.dishTagsTitle,
+            style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        ReorderableListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: tags.length,
+          onReorder: (oldIndex, newIndex) {
+            final updated = List<String>.from(tags);
+            if (newIndex > oldIndex) newIndex--;
+            updated.insert(newIndex, updated.removeAt(oldIndex));
+            _saveTags(updated);
+          },
+          itemBuilder: (context, index) {
+            final tagName = tags[index];
+            return ListTile(
+              key: ValueKey(tagName),
+              title: Text(tagName),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: l10n.rename,
+                    onPressed: () =>
+                        _showRenameTagDialog(context, index, tagName),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: l10n.delete,
+                    onPressed: () => _deleteTag(index),
+                  ),
+                  const Icon(Icons.drag_handle),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          icon: const Icon(Icons.add),
+          label: Text(l10n.addTag),
+          onPressed: () => _showAddTagDialog(context),
+        ),
       ],
     );
   }
@@ -172,6 +234,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (result != null) {
       _saveSlots([..._slots!, result]);
+    }
+  }
+
+  void _deleteTag(int index) {
+    final updated = List<String>.from(_tags!);
+    updated.removeAt(index);
+    _saveTags(updated);
+  }
+
+  Future<void> _showRenameTagDialog(
+      BuildContext context, int index, String current) async {
+    final l10n = context.l10n;
+    final controller = TextEditingController(text: current);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _TagNameDialog(
+        title: l10n.renameTagTitle,
+        controller: controller,
+        existing: _tags!,
+        excludeIndex: index,
+      ),
+    );
+    if (result != null) {
+      final updated = List<String>.from(_tags!);
+      updated[index] = result;
+      _saveTags(updated);
+    }
+  }
+
+  Future<void> _showAddTagDialog(BuildContext context) async {
+    final l10n = context.l10n;
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _TagNameDialog(
+        title: l10n.addTagTitle,
+        controller: controller,
+        existing: _tags!,
+      ),
+    );
+    if (result != null) {
+      _saveTags([..._tags!, result]);
     }
   }
 }
@@ -254,6 +358,84 @@ class _SlotNameDialogState extends State<_SlotNameDialog> {
         autofocus: true,
         decoration: InputDecoration(
           labelText: l10n.slotNameLabel,
+          errorText: _error,
+        ),
+        onChanged: (_) {
+          if (_error != null) setState(() => _error = null);
+        },
+        onSubmitted: (_) => _submit(context),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => _submit(context),
+          child: Text(l10n.save),
+        ),
+      ],
+    );
+  }
+
+  void _submit(BuildContext context) {
+    final error = _validate(widget.controller.text);
+    if (error != null) {
+      setState(() => _error = error);
+      return;
+    }
+    Navigator.of(context).pop(widget.controller.text.trim());
+  }
+}
+
+// ============================================================================
+// Tag name dialog
+// ============================================================================
+
+class _TagNameDialog extends StatefulWidget {
+  const _TagNameDialog({
+    required this.title,
+    required this.controller,
+    required this.existing,
+    this.excludeIndex,
+  });
+
+  final String title;
+  final TextEditingController controller;
+  final List<String> existing;
+  final int? excludeIndex;
+
+  @override
+  State<_TagNameDialog> createState() => _TagNameDialogState();
+}
+
+class _TagNameDialogState extends State<_TagNameDialog> {
+  String? _error;
+
+  String? _validate(String value) {
+    final l10n = context.l10n;
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return l10n.tagNameEmptyError;
+    final others = [
+      for (var i = 0; i < widget.existing.length; i++)
+        if (i != widget.excludeIndex) widget.existing[i],
+    ];
+    if (others.any((s) => s.toLowerCase() == trimmed.toLowerCase())) {
+      return l10n.tagNameExistsError;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(widget.title),
+      content: TextField(
+        controller: widget.controller,
+        autofocus: true,
+        decoration: InputDecoration(
+          labelText: l10n.tagNameLabel,
           errorText: _error,
         ),
         onChanged: (_) {

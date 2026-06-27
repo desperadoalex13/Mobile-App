@@ -515,6 +515,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveFailedSnackbar => 'Failed to save. Please try again.';
 
   @override
+  String get dishTagsTitle => 'Dish Tags';
+
+  @override
+  String get addTag => 'Add Tag';
+
+  @override
+  String get renameTagTitle => 'Rename Tag';
+
+  @override
+  String get addTagTitle => 'Add Tag';
+
+  @override
+  String get tagNameLabel => 'Tag name';
+
+  @override
+  String get tagNameEmptyError => 'Name cannot be empty';
+
+  @override
+  String get tagNameExistsError => 'A tag with this name already exists';
+
+  @override
+  String get tagsOptional => 'Tags (optional)';
+
+  @override
   String get languageTitle => 'Language';
 
   @override

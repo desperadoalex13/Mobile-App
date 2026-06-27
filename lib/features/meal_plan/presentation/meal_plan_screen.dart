@@ -757,17 +757,19 @@ class _DishPickerDialog extends ConsumerStatefulWidget {
 
 class _DishPickerDialogState extends ConsumerState<_DishPickerDialog> {
   String _query = '';
+  String _activeTag = '';
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final allDishes = ref.watch(dishesProvider).valueOrNull ?? [];
-    final filtered = _query.isEmpty
-        ? allDishes
-        : allDishes
-            .where(
-                (d) => d.name.toLowerCase().contains(_query.toLowerCase()))
-            .toList();
+    final tags = ref.watch(userTagsProvider);
+    final filtered = allDishes.where((d) {
+      final matchesQuery = _query.isEmpty ||
+          d.name.toLowerCase().contains(_query.toLowerCase());
+      final matchesTag = _activeTag.isEmpty || d.tags.contains(_activeTag);
+      return matchesQuery && matchesTag;
+    }).toList();
 
     return AlertDialog(
       title: Text(l10n.addDishDialogTitle),
@@ -784,6 +786,33 @@ class _DishPickerDialogState extends ConsumerState<_DishPickerDialog> {
               ),
               onChanged: (v) => setState(() => _query = v),
             ),
+            if (tags.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 36,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    FilterChip(
+                      label: Text(l10n.all),
+                      selected: _activeTag.isEmpty,
+                      onSelected: (_) => setState(() => _activeTag = ''),
+                    ),
+                    ...tags.map((tag) {
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: FilterChip(
+                          label: Text(tag),
+                          selected: _activeTag == tag,
+                          onSelected: (_) => setState(
+                              () => _activeTag = _activeTag == tag ? '' : tag),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 300),

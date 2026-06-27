@@ -52,6 +52,14 @@ class DishDetailScreen extends StatelessWidget {
                         TextStyle(color: colorScheme.onPrimaryContainer),
                   ),
                 ),
+                ...dish.tags.map(
+                  (t) => Chip(
+                    label: Text(t),
+                    backgroundColor: colorScheme.tertiaryContainer,
+                    labelStyle:
+                        TextStyle(color: colorScheme.onTertiaryContainer),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),

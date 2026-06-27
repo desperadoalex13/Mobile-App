@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/locale/locale_provider.dart';
 import '../../../l10n/l10n.dart';
+import '../../auth/presentation/profile_providers.dart';
 import '../data/dish_repository.dart';
 import '../data/open_food_facts_service.dart';
 import '../domain/dish_model.dart';
@@ -28,6 +29,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
   late final TextEditingController _servingsController;
   late final List<Ingredient> _ingredients;
   late final List<String> _labels;
+  late final List<String> _tags;
   late final List<TextEditingController> _instructionControllers;
 
   bool get _isEditing => widget.dish != null;
@@ -41,6 +43,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
         TextEditingController(text: (d?.servings ?? 1).toString());
     _ingredients = List.from(d?.ingredients ?? []);
     _labels = List.from(d?.labels ?? []);
+    _tags = List.from(d?.tags ?? []);
     _instructionControllers = (d?.instructions ?? [])
         .map((s) => TextEditingController(text: s))
         .toList();
@@ -70,6 +73,7 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
       servings: int.parse(_servingsController.text.trim()),
       ingredients: _ingredients,
       labels: List.from(_labels),
+      tags: List.from(_tags),
       instructions: _instructionControllers
           .map((c) => c.text.trim())
           .where((s) => s.isNotEmpty)
@@ -210,6 +214,26 @@ class _DishFormScreenState extends ConsumerState<DishFormScreen> {
                   selected: _labels.contains(label),
                   onSelected: (selected) => setState(() {
                     selected ? _labels.add(label) : _labels.remove(label);
+                  }),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Tags ──────────────────────────────────────────────────────
+            Text(
+              l10n.tagsOptional,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: ref.watch(userTagsProvider).map((tag) {
+                return FilterChip(
+                  label: Text(tag),
+                  selected: _tags.contains(tag),
+                  onSelected: (selected) => setState(() {
+                    selected ? _tags.add(tag) : _tags.remove(tag);
                   }),
                 );
               }).toList(),

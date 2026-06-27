@@ -516,6 +516,30 @@ class AppLocalizationsUk extends AppLocalizations {
   String get saveFailedSnackbar => 'Не вдалося зберегти. Спробуйте ще раз.';
 
   @override
+  String get dishTagsTitle => 'Теги страв';
+
+  @override
+  String get addTag => 'Додати тег';
+
+  @override
+  String get renameTagTitle => 'Перейменувати тег';
+
+  @override
+  String get addTagTitle => 'Додати тег';
+
+  @override
+  String get tagNameLabel => 'Назва тегу';
+
+  @override
+  String get tagNameEmptyError => 'Назва не може бути порожньою';
+
+  @override
+  String get tagNameExistsError => 'Тег з такою назвою вже існує';
+
+  @override
+  String get tagsOptional => 'Теги (необов\'язково)';
+
+  @override
   String get languageTitle => 'Мова';
 
   @override

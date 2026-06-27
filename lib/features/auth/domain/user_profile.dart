@@ -6,8 +6,9 @@ class UserProfile {
     required this.email,
     required this.createdAt,
     required this.mealSlots,
+    List<String>? dishTags,
     this.extra = const {},
-  });
+  }) : dishTags = dishTags ?? defaultDishTags;
 
   final String uid;
   final String email;
@@ -17,10 +18,23 @@ class UserProfile {
   /// Users can rename or add custom slots in the future.
   final List<String> mealSlots;
 
+  /// Configurable food-type tags (e.g. Dessert, Salad, Meat) — user-editable,
+  /// same pattern as [mealSlots].
+  final List<String> dishTags;
+
   /// Extensible map for future fields without breaking existing documents.
   final Map<String, dynamic> extra;
 
   static const defaultMealSlots = ['Breakfast', 'Lunch', 'Dinner'];
+  static const defaultDishTags = [
+    'Dessert',
+    'Salad',
+    'Side dish',
+    'Pasta',
+    'Meat',
+    'Fish',
+    'Fastfood',
+  ];
 
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -29,6 +43,7 @@ class UserProfile {
       email: data['email'] as String,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       mealSlots: List<String>.from(data['mealSlots'] ?? defaultMealSlots),
+      dishTags: List<String>.from(data['dishTags'] ?? defaultDishTags),
       extra: Map<String, dynamic>.from(data['extra'] ?? {}),
     );
   }
@@ -37,6 +52,7 @@ class UserProfile {
         'email': email,
         'createdAt': Timestamp.fromDate(createdAt),
         'mealSlots': mealSlots,
+        'dishTags': dishTags,
         'extra': extra,
       };
 }

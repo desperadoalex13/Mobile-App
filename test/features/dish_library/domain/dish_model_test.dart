@@ -149,5 +149,32 @@ void main() {
       final dish = Dish.fromFirestore(doc);
       expect(dish.instructions, isEmpty);
     });
+
+    test('tags round-trip through toFirestore / fromFirestore', () {
+      final original = Dish(
+        id: 'dish2',
+        name: 'Caesar Salad',
+        servings: 1,
+        ingredients: [],
+        tags: ['Salad', 'Fastfood'],
+      );
+
+      final map = original.toFirestore();
+      final doc = _FakeDoc('dish2', map);
+      final restored = Dish.fromFirestore(doc);
+
+      expect(restored.tags, ['Salad', 'Fastfood']);
+    });
+
+    test('tags default to empty list when absent', () {
+      final doc = _FakeDoc('d1', {
+        'name': 'Soup',
+        'servings': 2,
+        'ingredients': [],
+        'extra': {},
+      });
+      final dish = Dish.fromFirestore(doc);
+      expect(dish.tags, isEmpty);
+    });
   });
 }

@@ -986,6 +986,54 @@ abstract class AppLocalizations {
   /// **'Failed to save. Please try again.'**
   String get saveFailedSnackbar;
 
+  /// No description provided for @dishTagsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish Tags'**
+  String get dishTagsTitle;
+
+  /// No description provided for @addTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tag'**
+  String get addTag;
+
+  /// No description provided for @renameTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Tag'**
+  String get renameTagTitle;
+
+  /// No description provided for @addTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tag'**
+  String get addTagTitle;
+
+  /// No description provided for @tagNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag name'**
+  String get tagNameLabel;
+
+  /// No description provided for @tagNameEmptyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Name cannot be empty'**
+  String get tagNameEmptyError;
+
+  /// No description provided for @tagNameExistsError.
+  ///
+  /// In en, this message translates to:
+  /// **'A tag with this name already exists'**
+  String get tagNameExistsError;
+
+  /// No description provided for @tagsOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags (optional)'**
+  String get tagsOptional;
+
   /// No description provided for @languageTitle.
   ///
   /// In en, this message translates to:

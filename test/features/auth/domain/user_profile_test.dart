@@ -83,5 +83,36 @@ void main() {
       final profile = UserProfile.fromFirestore(doc);
       expect(profile.extra, isEmpty);
     });
+
+    test('dishTags round-trip through toFirestore / fromFirestore', () {
+      final now = DateTime(2026, 3, 6);
+      final profile = UserProfile(
+        uid: 'uid1',
+        email: 'a@b.com',
+        createdAt: now,
+        mealSlots: UserProfile.defaultMealSlots,
+        dishTags: ['Salad', 'Meat'],
+      );
+
+      final map = profile.toFirestore();
+      expect(map['dishTags'], ['Salad', 'Meat']);
+
+      final doc = _FakeDoc('uid1', map);
+      final restored = UserProfile.fromFirestore(doc);
+      expect(restored.dishTags, ['Salad', 'Meat']);
+    });
+
+    test('fromFirestore uses defaultDishTags when field absent', () {
+      final doc = _FakeDoc('uid1', {
+        'email': 'x@y.com',
+        'createdAt': Timestamp.fromDate(DateTime(2026)),
+        'mealSlots': UserProfile.defaultMealSlots,
+        // no dishTags field
+        'extra': {},
+      });
+
+      final profile = UserProfile.fromFirestore(doc);
+      expect(profile.dishTags, UserProfile.defaultDishTags);
+    });
   });
 }

@@ -7,6 +7,7 @@ class Dish {
     required this.servings,
     required this.ingredients,
     this.labels = const [],
+    this.tags = const [],
     this.instructions = const [],
     this.extraFields = const {},
   });
@@ -20,6 +21,10 @@ class Dish {
 
   /// Meal-type labels — any subset of [availableLabels], optional.
   final List<String> labels;
+
+  /// Food-type tags (e.g. Dessert, Salad, Meat) — any subset of the user's
+  /// configurable tag list (see [UserProfile.dishTags]), optional.
+  final List<String> tags;
 
   final List<String> instructions;
 
@@ -36,6 +41,7 @@ class Dish {
           .map((i) => Ingredient.fromMap(i as Map<String, dynamic>))
           .toList(),
       labels: List<String>.from(data['labels'] ?? []),
+      tags: List<String>.from(data['tags'] ?? []),
       instructions: List<String>.from(data['instructions'] ?? []),
       extraFields: Map<String, dynamic>.from(data['extra'] ?? {}),
     );
@@ -46,6 +52,7 @@ class Dish {
         'servings': servings,
         'ingredients': ingredients.map((i) => i.toMap()).toList(),
         'labels': labels,
+        'tags': tags,
         'instructions': instructions,
         'extra': extraFields,
       };
