@@ -9,7 +9,7 @@ class AppLocalizationsUk extends AppLocalizations {
   AppLocalizationsUk([String locale = 'uk']) : super(locale);
 
   @override
-  String get appTitle => 'Планувальник харчування';
+  String get appTitle => 'Tableplan';
 
   @override
   String get cancel => 'Скасувати';

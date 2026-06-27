@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working in this repository.
 
 ## Project Overview
 
-**Meal Planning Mobile Application** — Version 1.0 | 2026
+**Tableplan** — Meal Planning Mobile Application — Version 1.2.0 | 2026
 
 A practical tool that solves the daily household problem of deciding what to cook. Users build a weekly meal plan in a structured format and get tools to organize nutrition, generate shopping lists, and track macros automatically.
 
@@ -67,6 +67,16 @@ Users build a weekly meal plan with configurable daily meal slots (default: brea
   - `android/app/google-services.json`
   - `ios/Runner/GoogleService-Info.plist`
   - `lib/core/firebase/firebase_options.dart`
+
+---
+
+## Branding & Release
+
+- **Display name**: "Tableplan" — set in `android/app/src/main/AndroidManifest.xml` (`android:label`), `ios/Runner/Info.plist` (`CFBundleDisplayName`/`CFBundleName`), and `lib/app.dart` (`MaterialApp.title`); also the `appTitle` l10n key shown on the login screen (untranslated brand name in both `en`/`uk`)
+- **Package/bundle identifiers are unchanged** (`mobile_app` Dart package name, `com.desperadoalex13.mobile_app` Android applicationId, `com.desperadoalex13.mobileApp` iOS bundle ID) — renaming these would require re-registering the app with Firebase and the stores, so only the user-visible name was changed
+- **Android release signing**: `android/key.properties` (gitignored) + `android/app/upload-keystore.jks` (gitignored) configure the `release` signing config in `android/app/build.gradle.kts`; back these up outside the repo (password manager / encrypted storage) — losing them means future releases can't be signed as the same app
+- **Build release APK**: `flutter build apk --release` → `build/app/outputs/flutter-apk/app-release.apk`
+- **Version**: `pubspec.yaml` `version: X.Y.Z+N` — bump before producing a new release build
 
 ---
 
@@ -295,9 +305,12 @@ Before committing or pushing, verify:
 - `http: ^1.2.0` in `pubspec.yaml`
 
 ### Dish Import
-- **Starter dishes**: `DishSeeder.starterDishes` — 17 Ukrainian dishes (7 breakfast / 5 lunch / 5 dinner) with fixed `seed_*` IDs (safe re-import via Firestore `set()`) and `labels` set to match meal type
+- **Starter dishes**: `DishSeeder.starterDishes` — 55 Ukrainian dishes (8 breakfast / 30 lunch / 17 dinner) with fixed `seed_*` IDs (safe re-import via Firestore `set()`) and `labels` set to match meal type
 - **Auto-seed on registration**: `AuthRepository.registerWithEmail` batch-writes all starter dishes into the new user's `dishes` subcollection right after creating the Firestore profile — new users see a populated library immediately, no manual import needed
 - The "Import starter dishes" button in `DishLibraryScreen` remains as a fallback for re-importing/restoring (e.g. existing users, or after deleting dishes); dialog/snackbar text shows the dish count dynamically via `DishSeeder.starterDishes.length`
+- **Import is additive/upsert-only, never deletes**: removing a dish from `DishSeeder.starterDishes` does not remove it from a user's existing Firestore library — only new/still-listed IDs get written. Existing accounts keep stale dishes from older seeder versions until manually deleted (⋮ → Delete on the dish tile) or the user re-registers a fresh account
+- **Manual (non-DB) ingredient macro estimates** used across starter dishes when no `assets/data/products.json` entry exists — id prefix `manual_*`, falls back to "Other" shopping-list category: `manual_lavash`, `manual_prunes`, `manual_chicken_liver`, `manual_cream` (cooking cream, lighter than DB's `heavy_cream`), `manual_ground_chicken`, `manual_ground_turkey`, `manual_frozen_veg_mix`, `manual_pelmeni`, `manual_varenyky_pf`, `manual_mussels`, `manual_cevapi` (no ingredient breakdown was given for this one — pure estimate), `manual_bones` (broth bones), `manual_greens`, `manual_pickles`, `manual_sauce` (shawarma sauce), `manual_waffle_filling`, `manual_spice` (generic trivial seasoning, 0 macros, reused for pepper/paprika/bay leaf/herbs/etc.), `manual_nonfood` (cooking sleeve/parchment — zero nutrition, kept for shopping-list completeness)
+- Garlic cloves converted to grams at ~3g/clove; whole-item ingredients (eggs, bananas, lavash) converted to grams using established per-item weight assumptions (1 egg≈60g, 1 banana≈120g, 1 lavash≈80g) consistent with pre-existing dishes
 - **CSV import**: `CsvDishParser.parse(String)` in `csv_dish_parser.dart`
   - Handles RFC-4180 format: quoted multi-line cells, `""` escape, trailing-newline-optional
   - Column 1 = dish name, Column 2 = ingredient lines (one per line)
