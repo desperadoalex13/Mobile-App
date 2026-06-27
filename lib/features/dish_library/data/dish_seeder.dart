@@ -32,7 +32,6 @@ abstract class DishSeeder {
         _pilafPork(),
         _sausages(),
         _goulash(),
-        _cevapi(),
         _beefStroganoff(),
         _friedLiver(),
         _chashushuli(),
@@ -2152,28 +2151,6 @@ abstract class DishSeeder {
             proteinPerServing: 0,
             fatPerServing: _n(100, 10),
             carbsPerServing: 0,
-          ),
-        ],
-        instructions: [],
-      );
-
-  static Dish _cevapi() => Dish(
-        id: 'seed_cevapi',
-        name: 'Чівапчічі (п/ф)',
-        servings: 1,
-        labels: const ['Lunch'],
-        ingredients: [
-          // Semi-finished seasoned meat skewers — estimated nutrition (no
-          // ingredient breakdown given, treated like other п/ф products).
-          Ingredient(
-            productId: 'manual_cevapi',
-            name: 'Чівапчічі (п/ф)',
-            amountPerServing: 200,
-            unit: 'g',
-            caloriesPerServing: _n(250, 200),
-            proteinPerServing: _n(18.0, 200),
-            fatPerServing: _n(19.0, 200),
-            carbsPerServing: _n(2.0, 200),
           ),
         ],
         instructions: [],
